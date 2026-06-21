@@ -1,12 +1,11 @@
-/* ============================================================
+/* 
    TRIGGERS - BLOQUE 1: UNICIDAD TEMPORAL
    RN-05, RN-21, RN-60
-============================================================ */
+ */
 
--- ------------------------------------------------------------
 -- RN-05: un miembro no puede tener dos PeriodoVinculacion
 -- abiertos (Fecha_Fin IS NULL) al mismo tiempo.
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_periodo_unico()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -29,10 +28,10 @@ BEFORE INSERT OR UPDATE ON PeriodoVinculacion
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_periodo_unico();
 
--- ------------------------------------------------------------
+
 -- RN-21 / RN-60: no puede haber dos reservas CONFIRMADAS para
 -- el mismo espacio fisico o el mismo puesto en el mismo horario.
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_reserva_unica()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -76,14 +75,14 @@ CREATE OR REPLACE TRIGGER trg_reserva_unica
 BEFORE INSERT OR UPDATE ON Reserva
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_reserva_unica();
-/* ============================================================
+/*
    TRIGGERS - ZONA 1: MIEMBROS Y SEGURIDAD
    RN-03, RN-06, RN-07, RN-08, RN-09, RN-11, RN-14, RN-15, RN-16
-============================================================ */
+ */
 
--- ------------------------------------------------------------
+
 -- RN-03: 3 intentos fallidos en una Sesion -> bloquear al Miembro
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_bloqueo_intentos_fallidos()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -101,10 +100,10 @@ AFTER INSERT OR UPDATE ON Sesion
 FOR EACH ROW
 EXECUTE FUNCTION fn_bloqueo_intentos_fallidos();
 
--- ------------------------------------------------------------
+
 -- RN-06: si se cierra un periodo y no queda ninguno abierto
 -- para ese miembro -> Suspendida (solo si estaba Activa)
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_suspender_sin_periodo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -127,10 +126,10 @@ AFTER UPDATE ON PeriodoVinculacion
 FOR EACH ROW
 EXECUTE FUNCTION fn_suspender_sin_periodo();
 
--- ------------------------------------------------------------
+
 -- RN-07: no registrar Beneficiario si el miembro esta
 -- suspendido o bloqueado
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_estado_beneficiario()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -149,10 +148,10 @@ BEFORE INSERT ON Beneficiario
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_estado_beneficiario();
 
--- ------------------------------------------------------------
+
 -- RN-08: no registrar Vehiculo si el miembro esta
 -- suspendido o bloqueado
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_estado_vehiculo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -171,10 +170,10 @@ BEFORE INSERT ON Vehiculo
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_estado_vehiculo();
 
--- ------------------------------------------------------------
+
 -- RN-09: no crear Solicitud si el miembro esta
 -- suspendido o bloqueado
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_estado_solicitud()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -193,9 +192,9 @@ BEFORE INSERT ON Solicitud
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_estado_solicitud();
 
--- ------------------------------------------------------------
+
 -- RN-11: Fecha_Fin debe ser posterior a Fecha_Inicio
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_fechas_periodo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -211,10 +210,10 @@ BEFORE INSERT OR UPDATE ON PeriodoVinculacion
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_fechas_periodo();
 
--- ------------------------------------------------------------
+
 -- RN-14 / RN-15: CargaMenor y CargaMayor son mutuamente
 -- excluyentes para un mismo Beneficiario
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_carga_menor()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -245,10 +244,10 @@ BEFORE INSERT ON CargaMayor
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_carga_mayor();
 
--- ------------------------------------------------------------
+
 -- RN-16: solo puede registrar beneficiarios un miembro que
 -- tenga periodo activo Y sea Profesor o PersonalAdministrativo
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_rol_registrante()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -272,15 +271,15 @@ CREATE OR REPLACE TRIGGER trg_validar_rol_registrante
 BEFORE INSERT ON Beneficiario
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_rol_registrante();
-/* ============================================================
-   TRIGGERS - ZONA 2: SERVICIOS, TARIFAS Y SOLICITUDES
+/* 
+   TRIGGERS SERVICIOS, TARIFAS Y SOLICITUDES
    RN-17, RN-23, RN-28, RN-34
-============================================================ */
+*/
 
--- ------------------------------------------------------------
+
 -- RN-17: no se puede agregar un Acompanante a una Solicitud
 -- que ya esta Cancelada
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_acompanante_solicitud()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -300,11 +299,10 @@ BEFORE INSERT ON Acompanante
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_acompanante_solicitud();
 
--- ------------------------------------------------------------
 -- RN-23: el precio_final de una tarifa debe estar dentro de los
 -- limites (minimo_limite, maximo_limite) que define Ajusta para
 -- la categoria y sede del Servicio correspondiente
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_limites_tarifa()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -339,10 +337,9 @@ BEFORE INSERT ON Historial_Tarifas
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_limites_tarifa();
 
--- ------------------------------------------------------------
 -- RN-28: una EntidadExterna con fecha_vencimiento pasada no
 -- puede publicar nuevos servicios (no aplica a EntidadInterna)
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_entidad_vencida()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -365,10 +362,10 @@ BEFORE INSERT ON Publica
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_entidad_vencida();
 
--- ------------------------------------------------------------
+
 -- RN-34: un Paso_Actividad no puede iniciarse si el paso
 -- anterior de esa misma Solicitud no esta Completado
--- ------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION fn_validar_paso_secuencial()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -390,3 +387,117 @@ CREATE OR REPLACE TRIGGER trg_validar_paso_secuencial
 BEFORE INSERT ON Paso_Actividad
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_paso_secuencial();
+
+/* ============================================================
+  FINANZAS
+   RN-22, RN-49, RN-58
+============================================================ */
+-- RN-22: al confirmar una Reserva, marcar el espacio fisico o
+-- el puesto de estacionamiento como no disponible. Si la
+-- reserva se cancela despues de estar confirmada, se libera
+-- de nuevo (complemento logico, no rompe nada existente).
+
+CREATE OR REPLACE FUNCTION fn_actualizar_disponibilidad_reserva()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.estado = 'Confirmada' THEN
+        IF NEW.numero_espacio IS NOT NULL THEN
+            UPDATE EspacioFisico SET disponibilidad = 'No Disponible'
+            WHERE numero = NEW.numero_espacio
+              AND nombre_edif = NEW.nombre_edif
+              AND direccion_exacta = NEW.direccion_exacta
+              AND nombre_sede = NEW.nombre_sede_espacio;
+        ELSIF NEW.numero_puesto IS NOT NULL THEN
+            UPDATE Puesto_Estacionamiento SET estado = 'Reservado'
+            WHERE numero = NEW.numero_puesto
+              AND nombre_estacionamiento = NEW.nombre_estacionamiento
+              AND nombre_sede = NEW.nombre_sede_puesto;
+        END IF;
+    ELSIF TG_OP = 'UPDATE' AND OLD.estado = 'Confirmada' AND NEW.estado = 'Cancelada' THEN
+        IF NEW.numero_espacio IS NOT NULL THEN
+            UPDATE EspacioFisico SET disponibilidad = 'Disponible'
+            WHERE numero = NEW.numero_espacio
+              AND nombre_edif = NEW.nombre_edif
+              AND direccion_exacta = NEW.direccion_exacta
+              AND nombre_sede = NEW.nombre_sede_espacio;
+        ELSIF NEW.numero_puesto IS NOT NULL THEN
+            UPDATE Puesto_Estacionamiento SET estado = 'Libre'
+            WHERE numero = NEW.numero_puesto
+              AND nombre_estacionamiento = NEW.nombre_estacionamiento
+              AND nombre_sede = NEW.nombre_sede_puesto;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_actualizar_disponibilidad_reserva
+AFTER INSERT OR UPDATE ON Reserva
+FOR EACH ROW
+EXECUTE FUNCTION fn_actualizar_disponibilidad_reserva();
+
+-- ------------------------------------------------------------
+-- RN-49: cada vez que entra un Pago, recalcular el estado de
+-- la Factura segun cuanto se ha pagado en total
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_recalcular_estado_factura()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_total NUMERIC(10,2);
+    v_pagado NUMERIC(10,2);
+BEGIN
+    SELECT monto_total INTO v_total FROM Factura WHERE numero_de_control = NEW.numero_de_control;
+    SELECT COALESCE(SUM(monto),0) INTO v_pagado FROM Pagos WHERE numero_de_control = NEW.numero_de_control;
+
+    UPDATE Factura
+    SET estado = CASE
+        WHEN v_pagado >= v_total THEN 'Pagada'
+        WHEN v_pagado > 0 THEN 'Parcialmente Pagada'
+        ELSE 'Pendiente'
+    END
+    WHERE numero_de_control = NEW.numero_de_control;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_recalcular_estado_factura
+AFTER INSERT ON Pagos
+FOR EACH ROW
+EXECUTE FUNCTION fn_recalcular_estado_factura();
+
+-- ------------------------------------------------------------
+-- RN-58: un pago TAI no puede superar el saldo_virtual del
+-- miembro asociado a la factura, y debe descontarlo
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_validar_saldo_tai()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_ci VARCHAR(15);
+    v_saldo NUMERIC(10,2);
+BEGIN
+    SELECT f.CI INTO v_ci
+    FROM Pagos p
+    JOIN Factura f ON f.numero_de_control = p.numero_de_control
+    WHERE p.fecha_hora_pago = NEW.fecha_hora_pago AND p.monto = NEW.monto;
+
+    IF v_ci IS NULL THEN
+        RAISE EXCEPTION 'RN-58: el pago TAI debe estar asociado a una factura de un miembro (no de una entidad externa)';
+    END IF;
+
+    SELECT saldo_virtual INTO v_saldo FROM Miembro WHERE CI = v_ci;
+
+    IF NEW.monto > v_saldo THEN
+        RAISE EXCEPTION 'RN-58: el monto % supera el saldo virtual disponible (%) del miembro %', NEW.monto, v_saldo, v_ci;
+    END IF;
+
+    UPDATE Miembro SET saldo_virtual = saldo_virtual - NEW.monto WHERE CI = v_ci;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_validar_saldo_tai
+BEFORE INSERT ON TAI
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_saldo_tai();
