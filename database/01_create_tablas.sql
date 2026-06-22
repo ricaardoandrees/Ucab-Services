@@ -126,6 +126,7 @@ CREATE TABLE Beneficiario (
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE,
     CI_miembro VARCHAR(15) NOT NULL,
+    CONSTRAINT CK_BENEFICIARIO_FECHA_FIN CHECK (fecha_fin IS NULL OR estatus_cobertura = 'Inhabilitado'),
 
     CONSTRAINT PK_BENEFICIARIO PRIMARY KEY (CI),
     CONSTRAINT FK_BENEFICIARIO_MIEMBRO FOREIGN KEY (CI_miembro) REFERENCES Miembro(CI) ON DELETE CASCADE
@@ -217,6 +218,7 @@ CREATE TABLE Voluntariado (
     fecha_inicio TIMESTAMP NOT NULL,
     fecha_fin TIMESTAMP,
     estado VARCHAR(15) NOT NULL CHECK (estado IN ('Abierto','Cerrado','Finalizado')),
+    CONSTRAINT CK_VOLUNTARIADO_FECHAS CHECK (fecha_fin IS NULL OR fecha_fin > fecha_inicio),
 
     CONSTRAINT PK_VOLUNTARIADO PRIMARY KEY (nombre),
     CONSTRAINT FK_VOLUNTARIADO_ENTIDADPRESTADORA FOREIGN KEY (ID_EP) REFERENCES EntidadPrestadora(ID_EP)
@@ -246,7 +248,6 @@ CREATE TABLE Servicio (
     nombre_categoria VARCHAR(20) NOT NULL,
     ID_EP INT NOT NULL,
     nombre_sede VARCHAR(50) NOT NULL,
-
 
     CONSTRAINT PK_SERVICIO PRIMARY KEY (nombre, numero_servicio),
     CONSTRAINT FK_SERVICIO_CATEGORIA FOREIGN KEY (nombre_categoria) REFERENCES CategoriaServicio(Nombre),
@@ -326,6 +327,8 @@ CREATE TABLE Sede (
     CONSTRAINT PK_SEDE PRIMARY KEY (nombre)
 );
 
+-- Servicio se crea antes que Sede en este script; el FK se agrega aqui
+-- porque Sede ya existe en este punto (referencia hacia adelante).
 ALTER TABLE Servicio
     ADD CONSTRAINT FK_SERVICIO_SEDE FOREIGN KEY (nombre_sede) REFERENCES Sede(nombre);
 
@@ -398,6 +401,7 @@ CREATE TABLE Reserva (
     nombre_servicio VARCHAR(50) NOT NULL,
     numero_servicio INT NOT NULL,
     fecha_hora TIMESTAMP NOT NULL,
+    fecha_hora_creacion_solicitud TIMESTAMP NOT NULL,
 
     numero_espacio INT,
     nombre_edif VARCHAR(50),
@@ -407,10 +411,12 @@ CREATE TABLE Reserva (
     numero_puesto INT,
     nombre_estacionamiento VARCHAR(50),
     nombre_sede_puesto VARCHAR(50),
+
     estado VARCHAR(15) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente','Confirmada','Cancelada')),
 
     CONSTRAINT PK_RESERVA PRIMARY KEY (nombre_servicio, numero_servicio, fecha_hora),
     CONSTRAINT FK_RESERVA_SERVICIO FOREIGN KEY (nombre_servicio, numero_servicio) REFERENCES Servicio(nombre, numero_servicio),
+    CONSTRAINT FK_RESERVA_SOLICITUD FOREIGN KEY (fecha_hora_creacion_solicitud) REFERENCES Solicitud(fecha_hora_creacion),
     CONSTRAINT FK_RESERVA_ESPACIO FOREIGN KEY (numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio) REFERENCES EspacioFisico(numero, nombre_edif, direccion_exacta, nombre_sede),
     CONSTRAINT FK_RESERVA_PUESTO FOREIGN KEY (numero_puesto, nombre_estacionamiento, nombre_sede_puesto) REFERENCES Puesto_Estacionamiento(numero, nombre_estacionamiento, nombre_sede),
     CONSTRAINT CK_RESERVA_XOR CHECK (
@@ -436,10 +442,10 @@ CREATE TABLE Item_Consumo (
     fecha_hora_vigencia TIMESTAMP NOT NULL,
     nombre_servicio VARCHAR(50) NOT NULL,
     numero_servicio INT NOT NULL,
+    perfil_solicitante VARCHAR(20) NOT NULL CHECK (perfil_solicitante IN ('Miembro Activo','Egresado','Publico Externo')),
     cantidad INT NOT NULL CHECK (cantidad > 0),
     precio_unitario NUMERIC(10,2) NOT NULL CHECK (precio_unitario > 0),
     impuestos NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (impuestos >= 0),
-    perfil_solicitante VARCHAR(20) NOT NULL CHECK (perfil_solicitante IN ('Miembro Activo','Egresado','Publico Externo')),
 
     CONSTRAINT PK_ITEM_CONSUMO PRIMARY KEY (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud),
     CONSTRAINT FK_ITEM_FOLIO FOREIGN KEY (fecha_hora_apertura, fecha_hora_creacion_solicitud) REFERENCES Folio_Consumo(fecha_hora_apertura, fecha_hora_creacion_solicitud) ON DELETE CASCADE,
@@ -466,24 +472,28 @@ CREATE TABLE Factura (
     )
 );
 
+CREATE TABLE Tasa (
+    Fecha DATE NOT NULL,
+    Moneda VARCHAR(10) NOT NULL,
+    monto NUMERIC(6,2) NOT NULL CHECK (monto > 0),
+
+    CONSTRAINT PK_TASA PRIMARY KEY (Fecha, Moneda)
+);
+
 CREATE TABLE Pagos (
     fecha_hora_pago TIMESTAMP NOT NULL,
     monto NUMERIC(10,2) NOT NULL CHECK (monto > 0),
     numero_de_control INT NOT NULL,
+    Fecha_Tasa DATE,
+    Moneda_Tasa VARCHAR(10),
 
     CONSTRAINT PK_PAGOS PRIMARY KEY (fecha_hora_pago, monto),
-    CONSTRAINT FK_PAGOS_FACTURA FOREIGN KEY (numero_de_control) REFERENCES Factura(numero_de_control)
-);
-
-CREATE TABLE Tasa (
-    Fecha_hora TIMESTAMP NOT NULL,
-    Moneda VARCHAR(10) NOT NULL,
-    monto NUMERIC(6,2) NOT NULL,
-    Monto_Pago NUMERIC(10,2) NOT NULL,
-    Fecha_Hora_Pago TIMESTAMP NOT NULL,
-
-    CONSTRAINT PK_TASA PRIMARY KEY (Fecha_hora, Moneda),
-    CONSTRAINT FK_TASA_PAGOS FOREIGN KEY (Fecha_Hora_Pago, Monto_Pago) REFERENCES Pagos(fecha_hora_pago, monto)
+    CONSTRAINT FK_PAGOS_FACTURA FOREIGN KEY (numero_de_control) REFERENCES Factura(numero_de_control),
+    CONSTRAINT FK_PAGOS_TASA FOREIGN KEY (Fecha_Tasa, Moneda_Tasa) REFERENCES Tasa(Fecha, Moneda),
+    CONSTRAINT CK_PAGOS_TASA_XOR CHECK (
+        (Fecha_Tasa IS NULL AND Moneda_Tasa IS NULL) OR
+        (Fecha_Tasa IS NOT NULL AND Moneda_Tasa IS NOT NULL)
+    )
 );
 
 CREATE TABLE Pago_Presencial (

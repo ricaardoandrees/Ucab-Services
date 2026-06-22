@@ -1,11 +1,11 @@
-/* 
-   TRIGGERS - BLOQUE 1: UNICIDAD TEMPORAL
-   RN-05, RN-21, RN-60
- */
+/* ============================================================
+   TRIGGERS UNICIDAD TEMPORAL
+============================================================ */
 
+-- ------------------------------------------------------------
 -- RN-05: un miembro no puede tener dos PeriodoVinculacion
 -- abiertos (Fecha_Fin IS NULL) al mismo tiempo.
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_periodo_unico()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -23,15 +23,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_periodo_unico
+CREATE TRIGGER trg_periodo_unico
 BEFORE INSERT OR UPDATE ON PeriodoVinculacion
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_periodo_unico();
 
-
+-- ------------------------------------------------------------
 -- RN-21 / RN-60: no puede haber dos reservas CONFIRMADAS para
 -- el mismo espacio fisico o el mismo puesto en el mismo horario.
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_reserva_unica()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -71,18 +71,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_reserva_unica
+CREATE TRIGGER trg_reserva_unica
 BEFORE INSERT OR UPDATE ON Reserva
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_reserva_unica();
-/*
-   TRIGGERS - ZONA 1: MIEMBROS Y SEGURIDAD
-   RN-03, RN-06, RN-07, RN-08, RN-09, RN-11, RN-14, RN-15, RN-16
- */
+/* ============================================================
+   TRIGGERS- MIEMBROS Y SEGURIDAD
+============================================================ */
 
-
+-- ------------------------------------------------------------
 -- RN-03: 3 intentos fallidos en una Sesion -> bloquear al Miembro
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_bloqueo_intentos_fallidos()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -95,15 +94,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_bloqueo_intentos_fallidos
+CREATE TRIGGER trg_bloqueo_intentos_fallidos
 AFTER INSERT OR UPDATE ON Sesion
 FOR EACH ROW
 EXECUTE FUNCTION fn_bloqueo_intentos_fallidos();
 
-
+-- ------------------------------------------------------------
 -- RN-06: si se cierra un periodo y no queda ninguno abierto
 -- para ese miembro -> Suspendida (solo si estaba Activa)
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_suspender_sin_periodo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -121,15 +120,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_suspender_sin_periodo
+CREATE TRIGGER trg_suspender_sin_periodo
 AFTER UPDATE ON PeriodoVinculacion
 FOR EACH ROW
 EXECUTE FUNCTION fn_suspender_sin_periodo();
 
-
+-- ------------------------------------------------------------
 -- RN-07: no registrar Beneficiario si el miembro esta
 -- suspendido o bloqueado
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_estado_beneficiario()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -143,15 +142,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_estado_beneficiario
+CREATE TRIGGER trg_validar_estado_beneficiario
 BEFORE INSERT ON Beneficiario
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_estado_beneficiario();
 
-
+-- ------------------------------------------------------------
 -- RN-08: no registrar Vehiculo si el miembro esta
 -- suspendido o bloqueado
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_estado_vehiculo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -165,15 +164,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_estado_vehiculo
+CREATE TRIGGER trg_validar_estado_vehiculo
 BEFORE INSERT ON Vehiculo
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_estado_vehiculo();
 
-
+-- ------------------------------------------------------------
 -- RN-09: no crear Solicitud si el miembro esta
 -- suspendido o bloqueado
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_estado_solicitud()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -187,14 +186,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_estado_solicitud
+CREATE TRIGGER trg_validar_estado_solicitud
 BEFORE INSERT ON Solicitud
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_estado_solicitud();
 
-
+-- ------------------------------------------------------------
 -- RN-11: Fecha_Fin debe ser posterior a Fecha_Inicio
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_fechas_periodo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -205,15 +204,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_fechas_periodo
+CREATE TRIGGER trg_validar_fechas_periodo
 BEFORE INSERT OR UPDATE ON PeriodoVinculacion
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_fechas_periodo();
 
-
+-- ------------------------------------------------------------
 -- RN-14 / RN-15: CargaMenor y CargaMayor son mutuamente
 -- excluyentes para un mismo Beneficiario
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_carga_menor()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -224,7 +223,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_carga_menor
+CREATE TRIGGER trg_validar_carga_menor
 BEFORE INSERT ON CargaMenor
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_carga_menor();
@@ -239,15 +238,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_carga_mayor
+CREATE TRIGGER trg_validar_carga_mayor
 BEFORE INSERT ON CargaMayor
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_carga_mayor();
 
-
+-- ------------------------------------------------------------
 -- RN-16: solo puede registrar beneficiarios un miembro que
 -- tenga periodo activo Y sea Profesor o PersonalAdministrativo
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_rol_registrante()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -267,19 +266,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_rol_registrante
+CREATE TRIGGER trg_validar_rol_registrante
 BEFORE INSERT ON Beneficiario
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_rol_registrante();
-/* 
-   TRIGGERS SERVICIOS, TARIFAS Y SOLICITUDES
-   RN-17, RN-23, RN-28, RN-34
-*/
+/* ============================================================
+   TRIGGERS - SERVICIOS, TARIFAS Y SOLICITUDES
+============================================================ */
 
-
+-- ------------------------------------------------------------
 -- RN-17: no se puede agregar un Acompanante a una Solicitud
 -- que ya esta Cancelada
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_acompanante_solicitud()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -294,15 +292,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_acompanante_solicitud
+CREATE TRIGGER trg_validar_acompanante_solicitud
 BEFORE INSERT ON Acompanante
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_acompanante_solicitud();
 
+-- ------------------------------------------------------------
 -- RN-23: el precio_final de una tarifa debe estar dentro de los
 -- limites (minimo_limite, maximo_limite) que define Ajusta para
 -- la categoria y sede del Servicio correspondiente
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_limites_tarifa()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -332,14 +331,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_limites_tarifa
+CREATE TRIGGER trg_validar_limites_tarifa
 BEFORE INSERT ON Historial_Tarifas
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_limites_tarifa();
 
+-- ------------------------------------------------------------
 -- RN-28: una EntidadExterna con fecha_vencimiento pasada no
 -- puede publicar nuevos servicios (no aplica a EntidadInterna)
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_entidad_vencida()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -357,15 +357,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_entidad_vencida
+CREATE TRIGGER trg_validar_entidad_vencida
 BEFORE INSERT ON Publica
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_entidad_vencida();
 
-
+-- ------------------------------------------------------------
 -- RN-34: un Paso_Actividad no puede iniciarse si el paso
 -- anterior de esa misma Solicitud no esta Completado
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_validar_paso_secuencial()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -383,20 +383,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER trg_validar_paso_secuencial
+CREATE TRIGGER trg_validar_paso_secuencial
 BEFORE INSERT ON Paso_Actividad
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_paso_secuencial();
-
 /* ============================================================
-  FINANZAS
-   RN-22, RN-49, RN-58
+   TRIGGERS - FINANZAS
 ============================================================ */
+
+-- ------------------------------------------------------------
 -- RN-22: al confirmar una Reserva, marcar el espacio fisico o
 -- el puesto de estacionamiento como no disponible. Si la
 -- reserva se cancela despues de estar confirmada, se libera
 -- de nuevo (complemento logico, no rompe nada existente).
-
+-- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_actualizar_disponibilidad_reserva()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -501,3 +501,237 @@ CREATE OR REPLACE TRIGGER trg_validar_saldo_tai
 BEFORE INSERT ON TAI
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_saldo_tai();
+
+
+-- ------------------------------------------------------------
+-- RN-10: un miembro suspendido o bloqueado no puede crear una
+-- reserva. El CI se obtiene via Solicitud (fecha_hora_creacion_solicitud)
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_validar_estado_reserva()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_ci VARCHAR(15);
+    v_estado VARCHAR(15);
+BEGIN
+    SELECT CI INTO v_ci FROM Solicitud WHERE fecha_hora_creacion = NEW.fecha_hora_creacion_solicitud;
+    SELECT estado_de_cuenta INTO v_estado FROM Miembro WHERE CI = v_ci;
+
+    IF v_estado IN ('Suspendida','Bloqueada') THEN
+        RAISE EXCEPTION 'RN-10: el miembro % esta % y no puede crear reservas', v_ci, v_estado;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_validar_estado_reserva
+BEFORE INSERT ON Reserva
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_estado_reserva();
+
+-- ------------------------------------------------------------
+-- RN-42: el precio_unitario de un item debe coincidir exactamente
+-- con el precio_final del historial de tarifas que referencia
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_validar_precio_item()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_precio_tarifa NUMERIC(10,2);
+BEGIN
+    SELECT precio_final INTO v_precio_tarifa
+    FROM Historial_Tarifas
+    WHERE fecha_hora_vigencia = NEW.fecha_hora_vigencia
+      AND nombre_servicio = NEW.nombre_servicio
+      AND numero_servicio = NEW.numero_servicio
+      AND perfil_solicitante = NEW.perfil_solicitante;
+
+    IF NEW.precio_unitario <> v_precio_tarifa THEN
+        RAISE EXCEPTION 'RN-42: el precio_unitario (%) no coincide con la tarifa vigente (%)', NEW.precio_unitario, v_precio_tarifa;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_validar_precio_item
+BEFORE INSERT ON Item_Consumo
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_precio_item();
+
+-- ------------------------------------------------------------
+-- RN-53  Zelle, Crypto, y Efectivo en
+-- divisas deben tener su Pagos vinculado a una Tasa (Fecha_Tasa
+-- no nulo). registrar_pago_multimoneda ya garantiza esto, este
+-- trigger cubre el caso de un INSERT directo que se salte el
+-- procedimiento.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_validar_tasa_digital()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM Pagos
+        WHERE fecha_hora_pago = NEW.fecha_hora_pago AND monto = NEW.monto AND Fecha_Tasa IS NOT NULL
+    ) THEN
+        RAISE EXCEPTION 'RN-53: este pago multimoneda requiere que su fila en Pagos tenga Fecha_Tasa/Moneda_Tasa asignados';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_validar_tasa_zelle
+BEFORE INSERT ON Zelle
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_tasa_digital();
+
+CREATE OR REPLACE TRIGGER trg_validar_tasa_crypto
+BEFORE INSERT ON Crypto
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_tasa_digital();
+
+CREATE OR REPLACE FUNCTION fn_validar_tasa_efectivo()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.moneda <> 'Bolivares' AND NOT EXISTS (
+        SELECT 1 FROM Pagos
+        WHERE fecha_hora_pago = NEW.fecha_hora_pago AND monto = NEW.monto AND Fecha_Tasa IS NOT NULL
+    ) THEN
+        RAISE EXCEPTION 'RN-53: un pago en efectivo en % requiere que su fila en Pagos tenga Fecha_Tasa/Moneda_Tasa asignados', NEW.moneda;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_validar_tasa_efectivo
+BEFORE INSERT ON Efectivo
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_tasa_efectivo();
+
+-- ------------------------------------------------------------
+-- RN-65: cumplimiento_indice (Becario) se calcula solo, no se
+-- puede manipular manualmente: TRUE si promedio_ponderado >= 15.
+-- estatus_beneficio se ajusta junto con el indice.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_inicializar_indice_becario()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_promedio NUMERIC(4,2);
+BEGIN
+    SELECT promedio_ponderado INTO v_promedio FROM Estudiante WHERE CI = NEW.CI;
+    NEW.cumplimiento_indice := (v_promedio >= 15);
+    NEW.estatus_beneficio := CASE WHEN v_promedio >= 15 THEN 'Activo' ELSE 'Inactivo' END;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_inicializar_indice_becario
+BEFORE INSERT ON Becario
+FOR EACH ROW
+EXECUTE FUNCTION fn_inicializar_indice_becario();
+
+CREATE OR REPLACE FUNCTION fn_actualizar_indice_becario()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_cumple BOOLEAN;
+BEGIN
+    IF EXISTS (SELECT 1 FROM Becario WHERE CI = NEW.CI) THEN
+        v_cumple := (NEW.promedio_ponderado >= 15);
+        UPDATE Becario
+        SET cumplimiento_indice = v_cumple,
+            estatus_beneficio = CASE WHEN v_cumple THEN 'Activo' ELSE 'Inactivo' END
+        WHERE CI = NEW.CI;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_actualizar_indice_becario
+AFTER UPDATE ON Estudiante
+FOR EACH ROW
+WHEN (OLD.promedio_ponderado IS DISTINCT FROM NEW.promedio_ponderado)
+EXECUTE FUNCTION fn_actualizar_indice_becario();
+
+-- ------------------------------------------------------------
+-- fecha_hora_finalizado de un Paso_Actividad
+-- se graba sola al completarse, y no se puede alterar manualmente.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_bitacora_paso_finalizado()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.estado = 'Completado' THEN
+        IF TG_OP = 'INSERT' OR OLD.estado <> 'Completado' THEN
+            NEW.fecha_hora_finalizado := clock_timestamp();
+        ELSE
+            NEW.fecha_hora_finalizado := OLD.fecha_hora_finalizado;
+        END IF;
+    ELSE
+        NEW.fecha_hora_finalizado := NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_bitacora_paso_finalizado
+BEFORE INSERT OR UPDATE ON Paso_Actividad
+FOR EACH ROW
+EXECUTE FUNCTION fn_bitacora_paso_finalizado();
+/* ============================================================
+   RN-22
+============================================================ */
+
+CREATE OR REPLACE FUNCTION fn_disponibilidad_espacio()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.numero_espacio IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    IF NEW.estado = 'Confirmada' THEN
+        UPDATE EspacioFisico SET disponibilidad = 'No Disponible'
+        WHERE numero = NEW.numero_espacio AND nombre_edif = NEW.nombre_edif
+          AND direccion_exacta = NEW.direccion_exacta AND nombre_sede = NEW.nombre_sede_espacio;
+    ELSIF TG_OP = 'UPDATE' AND OLD.estado = 'Confirmada' AND NEW.estado = 'Cancelada' THEN
+        UPDATE EspacioFisico SET disponibilidad = 'Disponible'
+        WHERE numero = NEW.numero_espacio AND nombre_edif = NEW.nombre_edif
+          AND direccion_exacta = NEW.direccion_exacta AND nombre_sede = NEW.nombre_sede_espacio;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_disponibilidad_espacio
+AFTER INSERT OR UPDATE ON Reserva
+FOR EACH ROW
+EXECUTE FUNCTION fn_disponibilidad_espacio();
+
+
+CREATE OR REPLACE FUNCTION fn_disponibilidad_puesto()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.numero_puesto IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    IF NEW.estado = 'Confirmada' THEN
+        UPDATE Puesto_Estacionamiento SET estado = 'Reservado'
+        WHERE numero = NEW.numero_puesto AND nombre_estacionamiento = NEW.nombre_estacionamiento
+          AND nombre_sede = NEW.nombre_sede_puesto;
+    ELSIF TG_OP = 'UPDATE' AND OLD.estado = 'Confirmada' AND NEW.estado = 'Cancelada' THEN
+        UPDATE Puesto_Estacionamiento SET estado = 'Libre'
+        WHERE numero = NEW.numero_puesto AND nombre_estacionamiento = NEW.nombre_estacionamiento
+          AND nombre_sede = NEW.nombre_sede_puesto;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_disponibilidad_puesto
+AFTER INSERT OR UPDATE ON Reserva
+FOR EACH ROW
+EXECUTE FUNCTION fn_disponibilidad_puesto();
+
+-- El trigger viejo (fn_actualizar_disponibilidad_reserva /
+-- trg_actualizar_disponibilidad_reserva) se reemplaza por estos dos.
+DROP TRIGGER IF EXISTS trg_actualizar_disponibilidad_reserva ON Reserva;
+DROP FUNCTION IF EXISTS fn_actualizar_disponibilidad_reserva();

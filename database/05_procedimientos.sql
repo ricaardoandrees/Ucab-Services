@@ -1,10 +1,10 @@
-/*
+/* ============================================================
    PROCEDIMIENTOS ALMACENADOS - ZONA 2
    RN-33/41/46/47: crear_solicitud
    Inserta una Solicitud junto con su primer Paso_Actividad
    en una sola transaccion, garantizando que nunca exista una
    solicitud sin al menos un paso.
- */
+============================================================ */
 
 CREATE OR REPLACE PROCEDURE crear_solicitud(
     p_ci VARCHAR,
@@ -27,12 +27,11 @@ BEGIN
     RAISE NOTICE 'Solicitud creada con fecha_hora_creacion = %', v_ahora;
 END;
 $$;
-
-/* 
+/* ============================================================
    PROCEDIMIENTOS ALMACENADOS - ZONA 3
    RN-41/46/47: generar_factura
    RN-52/53: registrar_pago_multimoneda
-*/
+============================================================ */
 
 CREATE OR REPLACE PROCEDURE generar_factura(
     p_fecha_hora_apertura TIMESTAMP,
@@ -70,58 +69,248 @@ END;
 $$;
 
 
-CREATE OR REPLACE PROCEDURE registrar_pago_multimoneda(
+/* ============================================================
+   fn_garantizar_tasa_del_dia: pieza compartida por los 3
+   procedimientos de pago multimoneda. Si ya existe una Tasa
+   para hoy + esa moneda, no hace nada. Si no existe, la crea.
+   Siempre devuelve la fecha de hoy, para que el que la llama
+   no tenga que recalcular CURRENT_DATE por su cuenta.
+============================================================ */
+
+CREATE OR REPLACE FUNCTION fn_garantizar_tasa_del_dia(p_moneda VARCHAR, p_tasa NUMERIC)
+RETURNS DATE AS $$
+DECLARE
+    v_hoy DATE := CURRENT_DATE;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Tasa WHERE Fecha = v_hoy AND Moneda = p_moneda) THEN
+        INSERT INTO Tasa (Fecha, Moneda, monto) VALUES (v_hoy, p_moneda, p_tasa);
+    END IF;
+    RETURN v_hoy;
+END;
+$$ LANGUAGE plpgsql;
+
+
+/* ============================================================
+   registrar_pago_zelle
+============================================================ */
+CREATE OR REPLACE PROCEDURE registrar_pago_zelle(
     p_numero_de_control INT,
     p_monto NUMERIC,
-    p_tipo VARCHAR,                    -- 'Zelle', 'Crypto' o 'Efectivo'
-    p_moneda_tasa VARCHAR DEFAULT NULL,    -- codigo para Tasa: 'USD','USDT','EUR' (no aplica a Efectivo en Bolivares)
-    p_tasa NUMERIC DEFAULT NULL,
-    p_correo VARCHAR DEFAULT NULL,
-    p_codigo_confirmacion VARCHAR DEFAULT NULL,
-    p_nombre_titular VARCHAR DEFAULT NULL,
-    p_direccion_billetera VARCHAR DEFAULT NULL,
-    p_txid VARCHAR DEFAULT NULL,
-    p_red VARCHAR DEFAULT NULL,
-    p_moneda_efectivo VARCHAR DEFAULT NULL, -- 'Bolivares','Dolares','Euros'
-    p_monto_recibido NUMERIC DEFAULT NULL
+    p_moneda_tasa VARCHAR,
+    p_tasa NUMERIC,
+    p_correo VARCHAR,
+    p_codigo_confirmacion VARCHAR,
+    p_nombre_titular VARCHAR
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_ahora TIMESTAMP := clock_timestamp();
-    v_requiere_tasa BOOLEAN;
+    v_fecha_tasa DATE;
 BEGIN
-    v_requiere_tasa := (p_tipo IN ('Zelle','Crypto')) OR (p_tipo = 'Efectivo' AND p_moneda_efectivo <> 'Bolivares');
+    v_fecha_tasa := fn_garantizar_tasa_del_dia(p_moneda_tasa, p_tasa);
 
-    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control) VALUES (v_ahora, p_monto, p_numero_de_control);
+    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control, Fecha_Tasa, Moneda_Tasa)
+    VALUES (v_ahora, p_monto, p_numero_de_control, v_fecha_tasa, p_moneda_tasa);
 
-    IF v_requiere_tasa THEN
-        IF p_moneda_tasa IS NULL OR p_tasa IS NULL THEN
-            RAISE EXCEPTION 'RN-53: este pago es multimoneda y requiere moneda_tasa y tasa';
-        END IF;
-        INSERT INTO Tasa (Fecha_hora, Moneda, monto, Monto_Pago, Fecha_Hora_Pago)
-        VALUES (v_ahora, p_moneda_tasa, p_tasa, p_monto, v_ahora);
-    END IF;
+    INSERT INTO Pago_Digital (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
+    INSERT INTO Zelle (fecha_hora_pago, monto, correo_electronico_origen, codigo_confirmacion, nombre_titular)
+    VALUES (v_ahora, p_monto, p_correo, p_codigo_confirmacion, p_nombre_titular);
 
-    IF p_tipo = 'Zelle' THEN
-        INSERT INTO Pago_Digital (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
-        INSERT INTO Zelle (fecha_hora_pago, monto, correo_electronico_origen, codigo_confirmacion, nombre_titular)
-        VALUES (v_ahora, p_monto, p_correo, p_codigo_confirmacion, p_nombre_titular);
-
-    ELSIF p_tipo = 'Crypto' THEN
-        INSERT INTO Pago_Digital (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
-        INSERT INTO Crypto (fecha_hora_pago, monto, direccion_billetera, TXID, red)
-        VALUES (v_ahora, p_monto, p_direccion_billetera, p_txid, p_red);
-
-    ELSIF p_tipo = 'Efectivo' THEN
-        INSERT INTO Pago_Presencial (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
-        INSERT INTO Efectivo (fecha_hora_pago, monto, moneda, monto_recibido)
-        VALUES (v_ahora, p_monto, p_moneda_efectivo, p_monto_recibido);
-
-    ELSE
-        RAISE EXCEPTION 'RN-53: tipo de pago multimoneda no reconocido: %', p_tipo;
-    END IF;
-
-    RAISE NOTICE 'Pago % registrado con fecha_hora_pago = %', p_tipo, v_ahora;
+    RAISE NOTICE 'Pago Zelle registrado con fecha_hora_pago = %', v_ahora;
 END;
 $$;
+
+
+/* ============================================================
+   registrar_pago_crypto
+============================================================ */
+CREATE OR REPLACE PROCEDURE registrar_pago_crypto(
+    p_numero_de_control INT,
+    p_monto NUMERIC,
+    p_moneda_tasa VARCHAR,
+    p_tasa NUMERIC,
+    p_direccion_billetera VARCHAR,
+    p_txid VARCHAR,
+    p_red VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ahora TIMESTAMP := clock_timestamp();
+    v_fecha_tasa DATE;
+BEGIN
+    v_fecha_tasa := fn_garantizar_tasa_del_dia(p_moneda_tasa, p_tasa);
+
+    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control, Fecha_Tasa, Moneda_Tasa)
+    VALUES (v_ahora, p_monto, p_numero_de_control, v_fecha_tasa, p_moneda_tasa);
+
+    INSERT INTO Pago_Digital (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
+    INSERT INTO Crypto (fecha_hora_pago, monto, direccion_billetera, TXID, red)
+    VALUES (v_ahora, p_monto, p_direccion_billetera, p_txid, p_red);
+
+    RAISE NOTICE 'Pago Crypto registrado con fecha_hora_pago = %', v_ahora;
+END;
+$$;
+
+
+/* ============================================================
+   registrar_pago_efectivo: la Tasa solo se garantiza si la
+   moneda no es Bolivares (efectivo local no necesita tasa)
+============================================================ */
+CREATE OR REPLACE PROCEDURE registrar_pago_efectivo(
+    p_numero_de_control INT,
+    p_monto NUMERIC,
+    p_moneda_efectivo VARCHAR,
+    p_monto_recibido NUMERIC,
+    p_moneda_tasa VARCHAR DEFAULT NULL,
+    p_tasa NUMERIC DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ahora TIMESTAMP := clock_timestamp();
+    v_fecha_tasa DATE := NULL;
+    v_moneda_tasa VARCHAR(10) := NULL;
+BEGIN
+    IF p_moneda_efectivo <> 'Bolivares' THEN
+        IF p_moneda_tasa IS NULL OR p_tasa IS NULL THEN
+            RAISE EXCEPTION 'RN-53: un pago en efectivo en % requiere moneda_tasa y tasa', p_moneda_efectivo;
+        END IF;
+        v_fecha_tasa := fn_garantizar_tasa_del_dia(p_moneda_tasa, p_tasa);
+        v_moneda_tasa := p_moneda_tasa;
+    END IF;
+
+    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control, Fecha_Tasa, Moneda_Tasa)
+    VALUES (v_ahora, p_monto, p_numero_de_control, v_fecha_tasa, v_moneda_tasa);
+
+    INSERT INTO Pago_Presencial (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
+    INSERT INTO Efectivo (fecha_hora_pago, monto, moneda, monto_recibido)
+    VALUES (v_ahora, p_monto, p_moneda_efectivo, p_monto_recibido);
+
+    RAISE NOTICE 'Pago Efectivo (%) registrado con fecha_hora_pago = %', p_moneda_efectivo, v_ahora;
+END;
+$$;
+
+-- El procedimiento generico anterior se reemplaza por los 3 de arriba
+DROP PROCEDURE IF EXISTS registrar_pago_multimoneda(INT, NUMERIC, VARCHAR, VARCHAR, NUMERIC, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, NUMERIC);
+/* ============================================================
+   registrar_pago_tarjeta, registrar_pago_movil, registrar_pago_tai
+   Mismo patron que Zelle/Crypto/Efectivo, pero sin Tasa porque
+   estos 3 siempre son en Bolivares - no son multimoneda.
+============================================================ */
+
+CREATE OR REPLACE PROCEDURE registrar_pago_tarjeta(
+    p_numero_de_control INT,
+    p_monto NUMERIC,
+    p_tipo VARCHAR,
+    p_red VARCHAR,
+    p_num_tarjeta VARCHAR,
+    p_fecha_vencimiento DATE,
+    p_compania VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ahora TIMESTAMP := clock_timestamp();
+BEGIN
+    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control)
+    VALUES (v_ahora, p_monto, p_numero_de_control);
+
+    INSERT INTO Pago_Presencial (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
+    INSERT INTO Tarjeta (fecha_hora_pago, monto, tipo, red, num_tarjeta, fecha_vencimiento, compania)
+    VALUES (v_ahora, p_monto, p_tipo, p_red, p_num_tarjeta, p_fecha_vencimiento, p_compania);
+
+    RAISE NOTICE 'Pago con Tarjeta registrado con fecha_hora_pago = %', v_ahora;
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE registrar_pago_movil(
+    p_numero_de_control INT,
+    p_monto NUMERIC,
+    p_telefono VARCHAR,
+    p_numero_referencia VARCHAR,
+    p_banco_emisor VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ahora TIMESTAMP := clock_timestamp();
+BEGIN
+    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control)
+    VALUES (v_ahora, p_monto, p_numero_de_control);
+
+    INSERT INTO Pago_Presencial (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
+    INSERT INTO PagoMovil (fecha_hora_pago, monto, telefono, numero_referencia, banco_emisor)
+    VALUES (v_ahora, p_monto, p_telefono, p_numero_referencia, p_banco_emisor);
+
+    RAISE NOTICE 'Pago Movil registrado con fecha_hora_pago = %', v_ahora;
+END;
+$$;
+
+
+-- registrar_pago_tai: el chequeo de saldo_virtual (RN-58) ya lo
+-- hace el trigger trg_validar_saldo_tai al insertar en TAI, este
+-- procedimiento solo encadena los 3 inserts.
+CREATE OR REPLACE PROCEDURE registrar_pago_tai(
+    p_numero_de_control INT,
+    p_monto NUMERIC,
+    p_uid VARCHAR,
+    p_pos VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ahora TIMESTAMP := clock_timestamp();
+BEGIN
+    INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control)
+    VALUES (v_ahora, p_monto, p_numero_de_control);
+
+    INSERT INTO Pago_Presencial (fecha_hora_pago, monto) VALUES (v_ahora, p_monto);
+    INSERT INTO TAI (fecha_hora_pago, monto, UID, POS)
+    VALUES (v_ahora, p_monto, p_uid, p_pos);
+
+    RAISE NOTICE 'Pago TAI registrado con fecha_hora_pago = %', v_ahora;
+END;
+$$;
+/* ============================================================
+   actualizar_tasas_diarias: simula la actualizacion diaria del
+   BCV. Sube cada moneda conocida un 2% sobre su ultima tasa
+   registrada, e inserta la tasa de hoy (idempotente si se
+   corre dos veces el mismo dia: actualiza en vez de duplicar).
+============================================================ */
+
+CREATE OR REPLACE PROCEDURE actualizar_tasas_diarias()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_moneda VARCHAR(10);
+    v_ultima_tasa NUMERIC(6,2);
+    v_nueva_tasa NUMERIC(6,2);
+    v_hoy DATE := CURRENT_DATE;
+BEGIN
+    FOR v_moneda IN SELECT DISTINCT Moneda FROM Tasa LOOP
+        SELECT monto INTO v_ultima_tasa
+        FROM Tasa
+        WHERE Moneda = v_moneda
+        ORDER BY Fecha DESC LIMIT 1;
+
+        v_nueva_tasa := ROUND(v_ultima_tasa * 1.02, 2);
+
+        INSERT INTO Tasa (Fecha, Moneda, monto)
+        VALUES (v_hoy, v_moneda, v_nueva_tasa)
+        ON CONFLICT (Fecha, Moneda) DO UPDATE SET monto = EXCLUDED.monto;
+
+        RAISE NOTICE 'Tasa % actualizada: % -> % (+2%%)', v_moneda, v_ultima_tasa, v_nueva_tasa;
+    END LOOP;
+END;
+$$;
+
+
+/* ============================================================
+   buscar_candidatos_egresados: emparejamiento de la bolsa de
+   trabajo. Dado un titulo buscado (texto parcial), un indice
+   minimo, y cuantos anos recientes de graduacion contar,
+   devuelve los egresados que califican.
+============================================================ */

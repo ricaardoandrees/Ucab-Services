@@ -312,23 +312,23 @@ INSERT INTO Factura (numero_de_control, estado, monto_total, fecha_de_emision, f
 (5,'Pagada',11.6,'2026-05-06 09:45:00','2026-05-06 07:45:00','2026-05-06 07:45:00',NULL,'V-20444444'),
 (6,'Pagada',46.4,'2026-05-14 12:00:00','2026-05-07 11:20:00','2026-05-07 11:20:00',NULL,'V-20111111'),
 (7,'Pendiente',46.4,'2026-05-17 16:00:00','2026-05-10 15:30:00','2026-05-10 15:30:00',NULL,'V-20222222'),
-(8,'Pagada',5.8,'2026-05-11 08:10:00','2026-05-11 08:00:00','2026-05-11 08:00:00',NULL,'V-20111111');INSERT INTO Reserva (nombre_servicio, numero_servicio, fecha_hora, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio, numero_puesto, nombre_estacionamiento, nombre_sede_puesto, estado) VALUES
-('Alquiler de Auditorio Hermano Lanz',1,'2026-05-05 16:00:00',1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
-('Uso de Cancha Deportiva',1,'2026-05-06 07:45:00',2,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
-('Reserva de Puesto de Estacionamiento',1,'2026-05-11 08:00:00',NULL,NULL,NULL,NULL,4,'Estacionamiento Norte','Montalban','Confirmada');
+(8,'Pagada',5.8,'2026-05-11 08:10:00','2026-05-11 08:00:00','2026-05-11 08:00:00',NULL,'V-20111111');INSERT INTO Reserva (nombre_servicio, numero_servicio, fecha_hora, fecha_hora_creacion_solicitud, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio, numero_puesto, nombre_estacionamiento, nombre_sede_puesto, estado) VALUES
+('Alquiler de Auditorio Hermano Lanz',1,'2026-05-05 16:00:00','2026-05-05 16:00:00',1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
+('Uso de Cancha Deportiva',1,'2026-05-06 07:45:00','2026-05-06 07:45:00',2,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
+('Reserva de Puesto de Estacionamiento',1,'2026-05-11 08:00:00','2026-05-11 08:00:00',NULL,NULL,NULL,NULL,4,'Estacionamiento Norte','Montalban','Confirmada');
 
-INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control) VALUES
-('2026-05-01 10:35:00',29.00,1),
-('2026-05-02 11:05:00',17.40,2),
-('2026-05-10 09:10:00',92.80,3),
-('2026-05-05 18:10:00',150.00,4),
-('2026-05-06 09:50:00',11.60,5),
-('2026-05-14 12:10:00',46.40,6),
-('2026-05-11 08:15:00',5.80,8);
+INSERT INTO Tasa (Fecha, Moneda, monto) VALUES
+('2026-05-10','USD',36.50),
+('2026-05-14','USDT',36.80);
 
-INSERT INTO Tasa (Fecha_hora, Moneda, monto, Monto_Pago, Fecha_Hora_Pago) VALUES
-('2026-05-10 09:10:00','USD',36.50,92.80,'2026-05-10 09:10:00'),
-('2026-05-14 12:10:00','USDT',36.80,46.40,'2026-05-14 12:10:00');
+INSERT INTO Pagos (fecha_hora_pago, monto, numero_de_control, Fecha_Tasa, Moneda_Tasa) VALUES
+('2026-05-01 10:35:00',29.00,1,NULL,NULL),
+('2026-05-02 11:05:00',17.40,2,NULL,NULL),
+('2026-05-10 09:10:00',92.80,3,'2026-05-10','USD'),
+('2026-05-05 18:10:00',150.00,4,NULL,NULL),
+('2026-05-06 09:50:00',11.60,5,NULL,NULL),
+('2026-05-14 12:10:00',46.40,6,'2026-05-14','USDT'),
+('2026-05-11 08:15:00',5.80,8,NULL,NULL);
 
 INSERT INTO Pago_Presencial (fecha_hora_pago, monto) VALUES
 ('2026-05-01 10:35:00',29.00),
