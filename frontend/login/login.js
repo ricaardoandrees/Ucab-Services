@@ -1,8 +1,8 @@
-/* ============================================================
+/*
    login.js — lógica del formulario de inicio de sesión
    Endpoint: POST /api/auth/login
    Conecta directamente con el auth.js del backend Express.
-============================================================ */
+*/
 
 const API_URL = 'http://localhost:3000/api/auth/login'; // ajusta si cambia el puerto
 
@@ -86,7 +86,7 @@ form.addEventListener('submit', async (e) => {
     localStorage.setItem('usuario', JSON.stringify(data.usuario));
 
     // Redirigir al dashboard
-    window.location.href = 'dashboard.html'; // ajusta la ruta si es necesario
+    window.location.href = '../miembros/miembros.html'; // ajusta la ruta si es necesario
 
   } catch (err) {
     // Error de red (servidor caído, sin conexión, etc.)
