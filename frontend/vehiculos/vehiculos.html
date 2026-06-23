@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Mis Vehículos</title>
+  <link rel="stylesheet" href="vehiculos.css" />
+</head>
+<body>
+
+
+    <!-- Cabecera de página -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">🚗 Mis Vehículos</h1>
+        <p class="page-header__sub">Registra y gestiona los vehículos asociados a tu cuenta.</p>
+      </div>
+      <button class="btn btn-amber" id="btn-abrir-modal">+ Registrar vehículo</button>
+    </div>
+
+    <!-- Panel de búsqueda (solo admin/director) -->
+    <div class="card" id="panel-admin" style="display:none">
+      <div class="card__header">
+        <div class="card__header-left">
+          <span class="card__icon">🔍</span>
+          <span class="card__title">Consultar vehículos de un miembro</span>
+        </div>
+      </div>
+      <div class="card__body">
+        <div class="search-row">
+          <div class="field">
+            <label class="field__label" for="inp-ci-buscar">Cédula del miembro</label>
+            <input class="field__input" id="inp-ci-buscar" type="text"
+                   placeholder="V-12345678" maxlength="15" />
+          </div>
+          <button class="btn btn-primary" id="btn-buscar-ci">Buscar</button>
+        </div>
+        <div id="resultado-admin" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <!-- Mis vehículos -->
+    <div class="card">
+      <div class="card__header">
+        <div class="card__header-left">
+          <span class="card__icon">🚘</span>
+          <span class="card__title">Mis vehículos registrados</span>
+        </div>
+        <span id="badge-total" style="color:rgba(255,255,255,0.7);font-size:13px"></span>
+      </div>
+      <div class="card__body" style="padding:0">
+        <div class="table-wrap">
+          <table id="tabla-vehiculos" aria-label="Tabla de vehículos">
+            <thead>
+              <tr>
+                <th>Placa</th>
+                <th>Modelo</th>
+                <th>Color</th>
+                <th>Tipo</th>
+                <th>Año</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-vehiculos">
+              <tr class="empty-row">
+                <td colspan="6">Cargando vehículos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  
+
+  <!-- ── MODAL: Registrar vehículo ─────────────────────── -->
+  <div class="modal-backdrop" id="modal-registrar" role="dialog"
+       aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Registrar Vehículo</span>
+        <button class="modal__close" id="btn-cerrar-modal" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="form-vehiculo" novalidate>
+        <div class="modal__body">
+
+          <div id="alert-modal" class="alert alert--error"></div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="inp-placa">Placa *</label>
+              <input class="field__input" id="inp-placa" type="text"
+                     placeholder="AB123CD" maxlength="10" required />
+              <span class="field__error" id="err-placa"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="inp-tipo">Tipo *</label>
+              <select class="field__select" id="inp-tipo" required>
+                <option value="">Seleccionar...</option>
+                <option value="Carro">Carro</option>
+                <option value="Moto">Moto</option>
+              </select>
+              <span class="field__error" id="err-tipo"></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="inp-modelo">Modelo *</label>
+            <input class="field__input" id="inp-modelo" type="text"
+                   placeholder="Toyota Corolla" maxlength="20" required />
+            <span class="field__error" id="err-modelo"></span>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="inp-color">Color *</label>
+              <input class="field__input" id="inp-color" type="text"
+                     placeholder="Blanco" maxlength="15" required />
+              <span class="field__error" id="err-color"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="inp-ano">Año *</label>
+              <input class="field__input" id="inp-ano" type="number"
+                     placeholder="2022" min="1970" max="2030" required />
+              <span class="field__error" id="err-ano"></span>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn-secondary" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-guardar">
+            <span id="btn-guardar-text">Guardar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Confirmar eliminación ──────────────────── -->
+  <div class="modal-backdrop" id="modal-confirm" role="alertdialog" aria-modal="true">
+    <div class="confirm-box">
+      <div class="confirm-box__icon">⚠️</div>
+      <div class="confirm-box__title">¿Eliminar vehículo?</div>
+      <div class="confirm-box__msg" id="confirm-msg">
+        Esta acción no se puede deshacer.
+      </div>
+      <div class="confirm-box__actions">
+        <button class="btn-secondary" id="btn-confirm-no">Cancelar</button>
+        <button class="btn-danger" id="btn-confirm-si">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOASTS ─────────────────────────────────────────── -->
+  <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+  <script src="../js/sidebar.js"></script>
+  <script src="vehiculos.js"></script>
+</body>
+</html>

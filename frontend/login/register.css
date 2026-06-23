@@ -1,0 +1,75 @@
+/* ============================================================
+   register.css — estilos adicionales del formulario de registro
+   Hereda toda la base de login.css (variables, card, inputs,
+   botón). Solo agrega lo específico del registro.
+============================================================ */
+
+/* Tarjeta más ancha para el formulario de 2 columnas */
+.card--wide {
+  max-width: 640px;
+}
+
+/* Grid de 2 columnas para agrupar campos relacionados */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+
+/* Campo que ocupa las 2 columnas */
+.field--full {
+  grid-column: 1 / -1;
+}
+
+/* Encabezados de sección del formulario */
+.form__section {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 20px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.form__section:first-of-type {
+  margin-top: 4px;
+}
+
+/* Select con mismo estilo que los inputs */
+.field__select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A95B0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* Asterisco de campo obligatorio */
+.required {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+/* Alerta de éxito */
+.alert--success {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+}
+
+/* Responsive: una columna en pantallas pequeñas */
+@media (max-width: 520px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .field--full {
+    grid-column: 1;
+  }
+  .card--wide {
+    max-width: 100%;
+  }
+}

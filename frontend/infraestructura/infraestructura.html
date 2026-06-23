@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Infraestructura</title>
+  <link rel="stylesheet" href="infraestructura.css" />
+</head>
+<body>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">🏢 Infraestructura</h1>
+        <p class="page-header__sub">Gestión de sedes, edificaciones, espacios, servicios y aliados.</p>
+      </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" data-tab="tab-servicios">🔧 Servicios</button>
+      <button class="tab-btn" data-tab="tab-espacios">🚪 Espacios Físicos</button>
+      <button class="tab-btn" data-tab="tab-edificaciones">🏢 Edificaciones</button>
+      <button class="tab-btn" data-tab="tab-sedes" id="btn-tab-sedes" style="display:none">📍 Sedes</button>
+      <button class="tab-btn" data-tab="tab-aliados" id="btn-tab-aliados" style="display:none">🤝 Aliados</button>
+    </div>
+
+    <!-- ── TAB: SERVICIOS (Público/General) ─────────────── -->
+    <div id="tab-servicios" class="tab-panel active">
+      <div class="cards-grid" id="grid-servicios">
+        <div class="empty-state"><p class="empty-state__msg">Cargando servicios...</p></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: ESPACIOS ─────────────────────────────────── -->
+    <div id="tab-espacios" class="tab-panel">
+      <div class="table-container">
+        <div class="table-header">
+          <span class="table-title">Directorio de Espacios Físicos</span>
+          <button class="btn btn-amber" id="btn-add-espacio" style="display:none">+ Añadir Espacio</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Sede</th><th>Edificación</th><th>Nro</th><th>Capacidad</th><th>Disponibilidad</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tbody-espacios">
+              <tr class="empty-row"><td colspan="6">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: EDIFICACIONES ────────────────────────────── -->
+    <div id="tab-edificaciones" class="tab-panel">
+      <div class="table-container">
+        <div class="table-header">
+          <span class="table-title">Directorio de Edificaciones</span>
+          <button class="btn btn-amber" id="btn-add-edificacion" style="display:none">+ Añadir Edificación</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Sede</th><th>Nombre</th><th>Dirección Exacta</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tbody-edificaciones">
+              <tr class="empty-row"><td colspan="4">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: SEDES (Admin) ────────────────────────────── -->
+    <div id="tab-sedes" class="tab-panel">
+      <div class="table-container">
+        <div class="table-header">
+          <span class="table-title">Sedes Registradas</span>
+          <button class="btn btn-amber" id="btn-add-sede">+ Añadir Sede</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Nombre</th><th>Ubicación</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tbody-sedes">
+              <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: ALIADOS (Admin) ──────────────────────────── -->
+    <div id="tab-aliados" class="tab-panel">
+      <div class="table-container">
+        <div class="table-header">
+          <!-- Aliados fue movido a su propia página -->
+        </div>
+        <div class="table-wrap">
+          <table style="display: none;" id="table-aliados">
+            <thead>
+              <tr><th>RIF</th><th>Razón Social</th><th>Vencimiento</th><th>Tipo</th><th>Contactos</th></tr>
+            </thead>
+            <tbody id="tbody-aliados">
+              <tr class="empty-row"><td colspan="5">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal Sede -->
+  <div class="modal-backdrop" id="modal-sede">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="title-sede">Sede</span>
+        <button class="modal__close" onclick="cerrarModal('modal-sede')">✕</button>
+      </div>
+      <form id="form-sede" onsubmit="submitSede(event)">
+        <div class="modal__body">
+          <div id="alert-sede" class="alert alert--error"></div>
+          <div class="field">
+            <label class="field__label">Nombre</label>
+            <input class="field__input" id="inp-sede-nombre" type="text" maxlength="50" required />
+          </div>
+          <div class="field">
+            <label class="field__label">Ubicación</label>
+            <input class="field__input" id="inp-sede-ubicacion" type="text" maxlength="50" required />
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModal('modal-sede')">Cancelar</button>
+          <button type="submit" class="btn btn-amber">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Edificación -->
+  <div class="modal-backdrop" id="modal-edificacion">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="title-edificacion">Edificación</span>
+        <button class="modal__close" onclick="cerrarModal('modal-edificacion')">✕</button>
+      </div>
+      <form id="form-edificacion" onsubmit="submitEdificacion(event)">
+        <div class="modal__body">
+          <div id="alert-edificacion" class="alert alert--error"></div>
+          <div class="field">
+            <label class="field__label">Sede</label>
+            <select class="field__select" id="inp-edif-sede" required></select>
+          </div>
+          <div class="field">
+            <label class="field__label">Nombre</label>
+            <input class="field__input" id="inp-edif-nombre" type="text" maxlength="50" required />
+          </div>
+          <div class="field">
+            <label class="field__label">Dirección Exacta</label>
+            <textarea class="field__textarea" id="inp-edif-direccion" required></textarea>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModal('modal-edificacion')">Cancelar</button>
+          <button type="submit" class="btn btn-amber">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Espacio Físico -->
+  <div class="modal-backdrop" id="modal-espacio">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="title-espacio">Espacio Físico</span>
+        <button class="modal__close" onclick="cerrarModal('modal-espacio')">✕</button>
+      </div>
+      <form id="form-espacio" onsubmit="submitEspacio(event)">
+        <div class="modal__body">
+          <div id="alert-espacio" class="alert alert--error"></div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Sede</label>
+              <select class="field__select" id="inp-esp-sede" required onchange="loadEdificacionesDropdown()"></select>
+            </div>
+            <div class="field">
+              <label class="field__label">Edificación</label>
+              <select class="field__select" id="inp-esp-edif" required onchange="fillEspacioDireccion()"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label">Dirección Exacta (Autocompletada)</label>
+            <input class="field__input" id="inp-esp-direccion" type="text" disabled />
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Número</label>
+              <input class="field__input" id="inp-esp-numero" type="number" min="1" required />
+            </div>
+            <div class="field">
+              <label class="field__label">Capacidad Máxima</label>
+              <input class="field__input" id="inp-esp-cap" type="number" min="1" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label">Disponibilidad</label>
+            <select class="field__select" id="inp-esp-disp" required>
+              <option value="Disponible">Disponible</option>
+              <option value="No Disponible">No Disponible</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModal('modal-espacio')">Cancelar</button>
+          <button type="submit" class="btn btn-amber">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Recursos -->
+  <div class="modal-backdrop" id="modal-recursos">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">Recursos del Espacio <span id="title-recursos-num"></span></span>
+        <button class="modal__close" onclick="cerrarModal('modal-recursos')">✕</button>
+      </div>
+      <div class="modal__body">
+        <div id="alert-recursos" class="alert alert--error"></div>
+        <ul id="list-recursos" style="list-style: none; padding: 0; margin-bottom: 1rem; max-height: 200px; overflow-y: auto;">
+          <!-- Lista de recursos se inyecta aquí -->
+        </ul>
+        <form id="form-recursos-add" onsubmit="submitRecurso(event)" style="display: flex; gap: 0.5rem;" class="admin-only">
+          <input type="text" class="field__input" id="inp-recurso-nuevo" placeholder="Ej. Proyector, Pizarra, etc." required />
+          <button type="submit" class="btn btn-amber">Añadir</button>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn-outline" onclick="cerrarModal('modal-recursos')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ── TOASTS ─────────────────────────────────────────── -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="infraestructura.js"></script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+/* ============================================================
+   TOKENS — extraídos del dashboard de referencia
+============================================================ */
+:root {
+  --navy:        #1C3D6E;   /* sidebar y botones primarios        */
+  --navy-dark:   #162F56;   /* hover del botón                    */
+  --amber:       #E8A317;   /* acento (botón Activar MFA)         */
+  --bg-page:     #EEF1F7;   /* fondo gris claro de toda la página */
+  --bg-card:     #FFFFFF;   /* tarjeta principal                  */
+  --bg-input:    #F5F6FA;   /* fondo de los inputs                */
+  --border:      #DDE1EC;   /* borde de inputs                    */
+  --text-primary:#1A2B45;   /* texto principal                    */
+  --text-muted:  #6B7A99;   /* subtítulos y placeholders          */
+  --label:       #8A95B0;   /* labels pequeñas sobre los inputs   */
+  --error:       #D93025;   /* mensajes de error                  */
+  --radius-card: 12px;
+  --radius-input: 7px;
+  --shadow-card: 0 4px 20px rgba(28, 61, 110, 0.10);
+}
+
+/* ============================================================
+   RESET MÍNIMO
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ============================================================
+   LAYOUT — centra la tarjeta en pantalla
+============================================================ */
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+/* ============================================================
+   TARJETA
+============================================================ */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+}
+
+/* Cabecera azul — mismo estilo que el banner "Mi Perfil y Seguridad" */
+.card__header {
+  background-color: var(--navy);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.card__logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: var(--amber);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.card__brand {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.card__tagline {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Cuerpo del formulario */
+.card__body {
+  padding: 32px 28px 28px;
+}
+
+/* ============================================================
+   TÍTULOS DEL FORMULARIO
+============================================================ */
+.form__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+
+.form__subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* ============================================================
+   CAMPOS — mismo estilo que "Cédula" y "Email" del dashboard
+============================================================ */
+.field {
+  margin-bottom: 18px;
+}
+
+.field__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+/* Wrapper para input + ojo */
+.field__input-wrap {
+  position: relative;
+}
+
+.field__input {
+  width: 100%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.field__input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.field__input:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(28, 61, 110, 0.10);
+}
+
+/* Input dentro del wrap (con botón ojo) */
+.field__input-wrap .field__input {
+  padding-right: 44px;
+}
+
+/* Botón mostrar/ocultar contraseña */
+.field__toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--label);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.field__toggle:hover { color: var(--navy); }
+
+/* Estado de error en el input */
+.field__input.is-error {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.09);
+}
+
+.field__error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--error);
+  margin-top: 5px;
+  min-height: 16px;
+}
+
+/* ============================================================
+   ALERTA GENERAL (error del servidor)
+============================================================ */
+.alert {
+  border-radius: var(--radius-input);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+}
+
+.alert--error {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: var(--error);
+}
+
+.alert.visible { display: block; }
+
+/* ============================================================
+   BOTÓN PRIMARIO — igual a "Guardar Cambios" del dashboard
+============================================================ */
+.btn-primary {
+  width: 100%;
+  background-color: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-input);
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-primary:hover:not(:disabled) { background-color: var(--navy-dark); }
+.btn-primary:active:not(:disabled) { transform: scale(0.985); }
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Spinner de carga */
+.btn-primary__loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+
+.btn-primary.loading .btn-primary__loader { display: block; }
+.btn-primary.loading .btn-primary__text   { opacity: 0.7;   }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   PIE DE TARJETA
+============================================================ */
+.card__footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.link-forgot {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.link-forgot:hover { color: var(--navy); text-decoration: underline; }
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 460px) {
+  .card__header { padding: 20px; }
+  .card__body   { padding: 24px 20px 20px; }
+}

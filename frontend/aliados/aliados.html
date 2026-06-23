@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UCAB Services — Entidades Aliadas</title>
+  <link rel="stylesheet" href="aliados.css">
+</head>
+<body>
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Entidades Aliadas</h1>
+      <p class="page-header__sub">Gestión de concesionarios y aliados comerciales (HU-46)</p>
+    </div>
+  </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <span class="table-title">Directorio de Entidades</span>
+          <button class="btn btn-amber" id="btn-add-aliado" onclick="openModalAliadoCrear()">+ Añadir Aliado</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>RIF</th>
+                <th>RAZÓN SOCIAL</th>
+                <th>VENCIMIENTO</th>
+                <th>TIPO</th>
+                <th>CONTACTOS</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-aliados">
+              <tr class="empty-row"><td colspan="6">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+  <!-- Modal Aliado -->
+  <div class="modal-backdrop" id="modal-aliado">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">Entidad Externa</span>
+        <button class="modal__close" onclick="cerrarModal('modal-aliado')">✕</button>
+      </div>
+      <form id="form-aliado" onsubmit="submitAliado(event)">
+        <div class="modal__body">
+          <div id="alert-aliado" class="alert alert--error"></div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">RIF</label>
+              <input class="field__input" id="inp-al-rif" type="text" placeholder="Ej. J-12345678-9" required />
+            </div>
+            <div class="field">
+              <label class="field__label">Razón Social</label>
+              <input class="field__input" id="inp-al-razon" type="text" maxlength="20" required />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Tipo</label>
+              <select class="field__select" id="inp-al-tipo" required>
+                <option value="Concesionario">Concesionario</option>
+                <option value="Aliado Comercial">Aliado Comercial</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label">Fecha de Vencimiento</label>
+              <input class="field__input" id="inp-al-vence" type="date" required />
+            </div>
+          </div>
+          <p class="field__label" style="margin-top:0.5rem; color:#666;">Nota: Puedes añadir contactos más adelante (no implementado en esta vista básica).</p>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModal('modal-aliado')">Cancelar</button>
+          <button type="submit" class="btn btn-amber">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="aliados.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Registro</title>
+  <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="register.css" />
+</head>
+<body>
+
+  <div class="page">
+    <div class="card card--wide">
+
+      <!-- Cabecera (mismo estilo que login) -->
+      <div class="card__header">
+        <div class="card__logo">UC</div>
+        <div>
+          <p class="card__brand">UCAB Services</p>
+          <p class="card__tagline">Crear cuenta institucional</p>
+        </div>
+      </div>
+
+      <div class="card__body">
+        <h1 class="form__title">Registro de Miembro</h1>
+        <p class="form__subtitle">Completa tu información personal para solicitar acceso</p>
+
+        <form id="register-form" novalidate>
+
+          <!-- SECCIÓN 1: Identificación -->
+          <p class="form__section">Identificación</p>
+          <div class="grid-2">
+            <div class="field field--full">
+              <label class="field__label" for="CI">Cédula de Identidad</label>
+              <input class="field__input" type="text" id="CI" name="CI"
+                     placeholder="V-12345678" autocomplete="off" />
+              <span class="field__error" id="error-CI"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="fecha_nacimiento">Fecha de Nacimiento</label>
+              <input class="field__input" type="date" id="fecha_nacimiento" name="fecha_nacimiento" />
+              <span class="field__error" id="error-fecha_nacimiento"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="sexo">Sexo</label>
+              <select class="field__input field__select" id="sexo" name="sexo">
+                <option value="">Seleccionar...</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+              <span class="field__error" id="error-sexo"></span>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: Nombres -->
+          <p class="form__section">Nombres y Apellidos</p>
+          <div class="grid-2">
+            <div class="field">
+              <label class="field__label" for="primer_nombre">Primer Nombre <span class="required">*</span></label>
+              <input class="field__input" type="text" id="primer_nombre" name="primer_nombre"
+                     placeholder="Carlos" autocomplete="given-name" />
+              <span class="field__error" id="error-primer_nombre"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="segundo_nombre">Segundo Nombre</label>
+              <input class="field__input" type="text" id="segundo_nombre" name="segundo_nombre"
+                     placeholder="Opcional" autocomplete="additional-name" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="primer_apellido">Primer Apellido <span class="required">*</span></label>
+              <input class="field__input" type="text" id="primer_apellido" name="primer_apellido"
+                     placeholder="García" autocomplete="family-name" />
+              <span class="field__error" id="error-primer_apellido"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="segundo_apellido">Segundo Apellido</label>
+              <input class="field__input" type="text" id="segundo_apellido" name="segundo_apellido"
+                     placeholder="Opcional" />
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: Contacto -->
+          <p class="form__section">Contacto</p>
+          <div class="grid-2">
+            <div class="field field--full">
+              <label class="field__label" for="correo">Correo Institucional <span class="required">*</span></label>
+              <input class="field__input" type="email" id="correo" name="correo"
+                     placeholder="usuario@ucab.edu.ve" autocomplete="email" />
+              <span class="field__error" id="error-correo"></span>
+            </div>
+            <div class="field field--full">
+              <label class="field__label" for="num_personal">Teléfono Personal <span class="required">*</span></label>
+              <input class="field__input" type="tel" id="num_personal" name="num_personal"
+                     placeholder="04141234567" autocomplete="tel" />
+              <span class="field__error" id="error-num_personal"></span>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 4: Dirección -->
+          <p class="form__section">Dirección de Residencia</p>
+          <div class="grid-2">
+            <div class="field field--full">
+              <label class="field__label" for="calle1">Calle / Avenida <span class="required">*</span></label>
+              <input class="field__input" type="text" id="calle1" name="calle1"
+                     placeholder="Av. Principal, Urb. La California" />
+              <span class="field__error" id="error-calle1"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="residencia">Ciudad / Municipio <span class="required">*</span></label>
+              <input class="field__input" type="text" id="residencia" name="residencia"
+                     placeholder="Caracas" />
+              <span class="field__error" id="error-residencia"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="estado">Estado <span class="required">*</span></label>
+              <select class="field__input field__select" id="estado" name="estado">
+                <option value="">Seleccionar...</option>
+                <option>Distrito Capital</option>
+                <option>Miranda</option>
+                <option>Zulia</option>
+                <option>Carabobo</option>
+                <option>Aragua</option>
+                <option>Lara</option>
+                <option>Bolívar</option>
+                <option>Anzoátegui</option>
+                <option>Táchira</option>
+                <option>Mérida</option>
+                <option>Monagas</option>
+                <option>Sucre</option>
+                <option>Barinas</option>
+                <option>Falcón</option>
+                <option>Guárico</option>
+                <option>Yaracuy</option>
+                <option>Portuguesa</option>
+                <option>Trujillo</option>
+                <option>Cojedes</option>
+                <option>Nueva Esparta</option>
+                <option>Apure</option>
+                <option>Amazonas</option>
+                <option>Delta Amacuro</option>
+                <option>Vargas</option>
+              </select>
+              <span class="field__error" id="error-estado"></span>
+            </div>
+          </div>
+
+          <!-- Error general del servidor -->
+          <div class="alert alert--error" id="alert-general" role="alert" aria-live="polite"></div>
+          <div class="alert alert--success" id="alert-success" role="alert" aria-live="polite"></div>
+
+          <button type="submit" class="btn-primary" id="btn-submit">
+            <span class="btn-primary__text">Crear Cuenta</span>
+            <span class="btn-primary__loader" id="btn-loader" aria-hidden="true"></span>
+          </button>
+
+        </form>
+
+        <div class="card__footer">
+          <a href="login.html" class="link-forgot">¿Ya tienes cuenta? Inicia sesión</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="register.js"></script>
+</body>
+</html>

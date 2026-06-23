@@ -314,3 +314,28 @@ $$;
    minimo, y cuantos anos recientes de graduacion contar,
    devuelve los egresados que califican.
 ============================================================ */
+
+
+CREATE OR REPLACE PROCEDURE finalizar_voluntariados_vencidos()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_actualizados INT;
+BEGIN
+    -- Finaliza Abiertos Y Cerrados cuya fecha_fin ya pasó
+    UPDATE Voluntariado
+    SET estado = 'Finalizado'
+    WHERE fecha_fin IS NOT NULL
+      AND fecha_fin < NOW()
+      AND estado IN ('Abierto', 'Cerrado');
+
+    GET DIAGNOSTICS v_actualizados = ROW_COUNT;
+    RAISE NOTICE '% voluntariado(s) marcado(s) como Finalizado.', v_actualizados;
+END;
+$$;
+/* ============================================================
+   PROCEDIMIENTO: finalizar_voluntariados_vencidos
+   Cambia a 'Finalizado' todos los voluntariados cuya
+   fecha_fin ya pasó y aún están en estado 'Abierto'.
+   Uso: CALL finalizar_voluntariados_vencidos();
+============================================================ */

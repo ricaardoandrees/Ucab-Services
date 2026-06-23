@@ -81,7 +81,7 @@ router.post('/login', async (req, res) => {
     // const contrasenaValida = await bcrypt.compare(contrasena, miembro.contrasena);
 
     // Registrar sesion — el trigger RN-03 cuenta intentos_fallidos y bloquea al llegar a 3
-    const uid = (req.headers['user-agent'] || 'unknown').substring(0, 50);
+    const uid = (req.headers['user-agent'] || 'unknown').substring(0, 40);
     await pool.query(
       `INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, intentos_fallidos, MFA)
        VALUES (NOW(), $1, $2, $3, 'Inactivo')`,

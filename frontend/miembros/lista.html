@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Usuarios — UCAB Services</title>
+  <script>const ROLES_PERMITIDOS = ['admin', 'director'];</script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/api.js"></script>
+  <link rel="stylesheet" href="lista.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Control de Usuarios</h1>
+      <p class="page-header__sub">Gestión de cuentas, estados y auditoría de sesiones</p>
+    </div>
+    <a href="miembros.html" class="btn-secondary">Mi Perfil</a>
+  </div>
+
+  <!-- Toolbar: búsqueda + filtro estado -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="buscador" type="text" placeholder="Buscar por nombre, CI o correo..." />
+    </div>
+    <select class="filter-select" id="filtro-estado">
+      <option value="">Todos los estados</option>
+      <option value="Activa">Activa</option>
+      <option value="Suspendida">Suspendida</option>
+      <option value="Bloqueada">Bloqueada</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <table class="tabla" id="tabla-miembros">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="ci">CI <span class="sort-icon">↕</span></th>
+          <th class="sortable" data-col="nombre">Nombre <span class="sort-icon">↕</span></th>
+          <th class="sortable" data-col="correo">Correo <span class="sort-icon">↕</span></th>
+          <th class="sortable" data-col="estado_de_cuenta">Estado <span class="sort-icon">↕</span></th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <!-- Skeleton -->
+    <div id="skeleton">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination" id="paginacion"></div>
+  </div>
+
+  <!-- ── Modal: Cambiar Estado ── -->
+  <div class="modal-backdrop" id="modal-estado" style="display:none">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Cambiar Estado de Cuenta</h3>
+        <button class="modal__close" onclick="cerrarModal('modal-estado')">✕</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">Miembro: <strong id="modal-estado-nombre"></strong></p>
+        <div class="field">
+          <label class="field__label">Nuevo Estado</label>
+          <select class="field__input" id="select-estado">
+            <option value="Activa">Activa</option>
+            <option value="Suspendida">Suspendida</option>
+            <option value="Bloqueada">Bloqueada</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" onclick="cerrarModal('modal-estado')">Cancelar</button>
+        <button class="btn-primary" id="btn-confirmar-estado">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Sesiones ── -->
+  <div class="modal-backdrop" id="modal-sesiones" style="display:none">
+    <div class="modal modal--wide">
+      <div class="modal__header">
+        <h3 class="modal__title">Historial de Sesiones</h3>
+        <button class="modal__close" onclick="cerrarModal('modal-sesiones')">✕</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">Miembro: <strong id="modal-sesiones-nombre"></strong></p>
+        <div id="sesiones-contenido"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Confirmar Eliminar ── -->
+  <div class="modal-backdrop" id="modal-eliminar" style="display:none">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title" style="color:#D93025">Eliminar Miembro</h3>
+        <button class="modal__close" onclick="cerrarModal('modal-eliminar')">✕</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">¿Estás seguro que deseas eliminar a <strong id="modal-eliminar-nombre"></strong>? Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" onclick="cerrarModal('modal-eliminar')">Cancelar</button>
+        <button class="btn-danger" id="btn-confirmar-eliminar">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="lista.js"></script>
+</body>
+</html>

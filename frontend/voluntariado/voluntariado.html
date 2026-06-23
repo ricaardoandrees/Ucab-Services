@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Voluntariado</title>
+  <link rel="stylesheet" href="voluntariado.css" />
+</head>
+<body>
+
+  <!-- ── TOPBAR ────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <div class="topbar__logo">UC</div>
+      <span class="topbar__name">UCAB Services</span>
+    </div>
+    <div class="topbar__user">
+      <span class="topbar__greeting" id="greeting">Cargando...</span>
+      <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- ── PÁGINA ─────────────────────────────────────────── -->
+  <main class="page">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">🤝 Voluntariado</h1>
+        <p class="page-header__sub">Oportunidades de voluntariado institucional UCAB.</p>
+      </div>
+      <!-- Solo directors/admins -->
+      <button class="btn btn-amber" id="btn-publicar" style="display:none">
+        + Publicar voluntariado
+      </button>
+    </div>
+
+    <!-- Filtro por estado -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" role="tab" data-estado="Abierto"
+              onclick="filtrar('Abierto', this)">🟢 Abiertos</button>
+      <button class="tab-btn" role="tab" data-estado="Cerrado"
+              onclick="filtrar('Cerrado', this)">🔴 Cerrados</button>
+      <button class="tab-btn" role="tab" data-estado="Finalizado"
+              onclick="filtrar('Finalizado', this)">⚫ Finalizados</button>
+    </div>
+
+    <!-- Grid de cards -->
+    <div class="cards-grid" id="vol-grid">
+      <div class="empty-state">
+        <div class="empty-state__icon">⏳</div>
+        <p class="empty-state__msg">Cargando voluntariados...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── MODAL: Crear / Editar voluntariado ─────────────── -->
+  <div class="modal-backdrop" id="modal-form" role="dialog"
+       aria-modal="true" aria-labelledby="modal-form-title">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-form-title">Publicar Voluntariado</span>
+        <button class="modal__close" onclick="cerrarModal('modal-form')" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="form-voluntariado" novalidate>
+        <div class="modal__body">
+          <div id="alert-form" class="alert alert--error"></div>
+
+          <div class="field">
+            <label class="field__label" for="inp-nombre">Nombre *</label>
+            <input class="field__input" id="inp-nombre" type="text"
+                   placeholder="Ej: Jornada de Reforestación" maxlength="25" required />
+            <span class="field__error" id="err-nombre"></span>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="inp-idep">Entidad Prestadora *</label>
+            <select class="field__select" id="inp-idep" required>
+              <option value="">Cargando entidades...</option>
+            </select>
+            <span class="field__error" id="err-idep"></span>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="inp-descripcion">Descripción *</label>
+            <textarea class="field__textarea" id="inp-descripcion"
+                      placeholder="Describe la actividad..." maxlength="250" required></textarea>
+            <span class="field__error" id="err-desc"></span>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="inp-fecha-inicio">Fecha inicio *</label>
+              <input class="field__input" id="inp-fecha-inicio" type="datetime-local" required />
+              <span class="field__error" id="err-inicio"></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="inp-fecha-fin">Fecha fin (opcional)</label>
+              <input class="field__input" id="inp-fecha-fin" type="datetime-local" />
+            </div>
+          </div>
+
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn-secondary" onclick="cerrarModal('modal-form')">Cancelar</button>
+          <button type="submit" class="btn btn-amber" id="btn-form-submit">Publicar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Participantes ───────────────────────────── -->
+  <div class="modal-backdrop" id="modal-participantes" role="dialog"
+       aria-modal="true" aria-labelledby="modal-part-title">
+    <div class="modal modal--lg">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-part-title">Participantes</span>
+        <button class="modal__close" onclick="cerrarModal('modal-participantes')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal__body" style="padding:0">
+        <div class="table-wrap">
+          <table aria-label="Participantes del voluntariado">
+            <thead>
+              <tr>
+                <th>CI</th><th>Nombre</th><th>Apellido</th>
+                <th>Correo</th><th>Nro. Personal</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-participantes">
+              <tr class="empty-row"><td colspan="5">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-secondary" onclick="cerrarModal('modal-participantes')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Confirmar acción ───────────────────────── -->
+  <div class="modal-backdrop" id="modal-confirm" role="alertdialog" aria-modal="true">
+    <div class="confirm-box">
+      <div class="confirm-box__icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-box__title" id="confirm-title">¿Estás seguro?</div>
+      <div class="confirm-box__msg" id="confirm-msg">Esta acción no se puede deshacer.</div>
+      <div class="confirm-box__actions">
+        <button class="btn-secondary" id="btn-confirm-no">Cancelar</button>
+        <button class="btn btn-danger" id="btn-confirm-si">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOASTS ─────────────────────────────────────────── -->
+  <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+
+  <script src="voluntariado.js"></script>
+</body>
+</html>
