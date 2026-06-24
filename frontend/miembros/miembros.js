@@ -68,27 +68,104 @@ async function cargarUltCambio() {
 async function cargarVinculaciones() {
   const contenedor = document.getElementById('vinculaciones-list');
   try {
-    const lista = await api.get(`/vinculaciones/${CI}`);
+    const data = await api.get(`/vinculaciones/${CI}`);
+    const { periodos, especializaciones } = data;
 
-    if (!lista || lista.length === 0) {
+    if ((!periodos || periodos.length === 0) && (!especializaciones || especializaciones.length === 0)) {
       contenedor.innerHTML = '<p style="color:var(--muted);font-size:13px;">Sin vinculaciones registradas.</p>';
       return;
     }
 
-    contenedor.innerHTML = lista.map(v => {
-      const activo = !v.fecha_fin;
-      const badge  = activo
-        ? '<span class="badge badge--activo">Activo</span>'
-        : '<span class="badge badge--inactivo">Inactivo</span>';
-      return `
-        <div class="vinc-item">
-          <div>
-            <p class="vinc-subtipo">${v.subtipo || 'Miembro'}</p>
-            <p class="vinc-fecha">${formatearFecha(v.fecha_inicio)}</p>
-          </div>
-          ${badge}
-        </div>`;
-    }).join('');
+    function detalleSubtipo(subtipo, d) {
+      if (!d) return '';
+      const fila = (label, val) => val != null && val !== ''
+        ? `<div class="vinc-attr"><span class="vinc-attr__label">${label}</span><span class="vinc-attr__val">${val}</span></div>`
+        : '';
+
+      if (subtipo === 'Estudiante') return [
+        fila('Escuela',   d.escuela),
+        fila('Facultad',  d.facultad),
+        fila('Semestre',  d.semestre_actual),
+        fila('UC aprobadas', d.uc_aprobadas),
+        fila('Promedio',  d.promedio_ponderado),
+      ].join('');
+
+      if (subtipo === 'Becario') return [
+        fila('Escuela',   d.escuela),
+        fila('Facultad',  d.facultad),
+        fila('Semestre',  d.semestre_actual),
+        fila('UC aprobadas', d.uc_aprobadas),
+        fila('Promedio',  d.promedio_ponderado),
+        fila('Tipo de beca', d.tipo_beca),
+        fila('Estatus beca', d.estatus_beneficio),
+        fila('Cumplimiento índice', d.cumplimiento_indice ? 'Sí' : 'No'),
+      ].join('');
+
+      if (subtipo === 'Preparador') return [
+        fila('Escuela',    d.escuela),
+        fila('Semestre',   d.semestre_actual),
+        fila('Promedio',   d.promedio_ponderado),
+        fila('Asignatura', d.asignatura),
+        fila('Horas ayudantía', d.horas),
+      ].join('');
+
+      if (subtipo === 'Profesor') return [
+        fila('Escalafón',       d.escalafon),
+        fila('Carga horaria',   d.carga_horaria ? `${d.carga_horaria} hrs` : null),
+        fila('Cód. investigador', d.cod_investigador),
+      ].join('');
+
+      if (subtipo === 'PersonalAdministrativo') return [
+        fila('Cargo',         d.cargo),
+        fila('Adscripción',   d.adscripcion_presupuestaria),
+        fila('Carga semanal', d.carga_semanal ? `${d.carga_semanal} hrs` : null),
+      ].join('');
+
+      if (subtipo === 'Egresado') return [
+        fila('Título',          d.titulo),
+        fila('Año graduación',  d.ano_graduacion),
+        fila('Índice final',    d.indice_final),
+      ].join('');
+
+      return '';
+    }
+
+    let rolesHTML = '';
+    if (especializaciones && especializaciones.length > 0) {
+      rolesHTML = `<p style="font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Roles actuales</p>`;
+      rolesHTML += especializaciones.map(e => {
+        const detalle = detalleSubtipo(e.subtipo, e.datos);
+        return `
+          <div class="vinc-item" style="align-items:flex-start">
+            <div style="flex:1;min-width:0">
+              <p class="vinc-subtipo">${e.subtipo}</p>
+              ${detalle ? `<div class="vinc-attrs">${detalle}</div>` : ''}
+            </div>
+            <span class="badge badge--activo" style="flex-shrink:0;margin-top:2px">Activo</span>
+          </div>`;
+      }).join('');
+    }
+
+    let periodosHTML = '';
+    const periodosCerrados = periodos ? periodos.filter(v => v.fecha_fin) : [];
+    if (periodosCerrados.length > 0) {
+      periodosHTML = `<p style="font-size:11px;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px">Períodos anteriores</p>`;
+      periodosHTML += periodosCerrados.map(v => {
+        const fechaInicio = formatearFecha(v.fecha_inicio);
+        const fechaFin    = formatearFecha(v.fecha_fin);
+        const rolLabel    = v.rol ? `<p class="vinc-subtipo" style="font-size:13px">${v.rol}</p>` : '';
+        return `
+          <div class="vinc-item">
+            <div>
+              ${rolLabel}
+              <p class="vinc-fecha">${fechaInicio} → ${fechaFin}</p>
+            </div>
+            <span class="badge badge--inactivo">Cerrado</span>
+          </div>`;
+      }).join('');
+    }
+
+    contenedor.innerHTML = rolesHTML + periodosHTML;
 
   } catch {
     contenedor.innerHTML = `

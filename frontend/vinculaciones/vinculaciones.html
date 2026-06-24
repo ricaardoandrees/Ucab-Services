@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vinculaciones — UCAB Services</title>
+  <script>const ROLES_PERMITIDOS = ['admin', 'director'];</script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/api.js"></script>
+  <link rel="stylesheet" href="vinculaciones.css" />
+</head>
+<body>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Gestión de Vinculaciones</h1>
+      <p class="page-header__sub">Administra los períodos y roles de los miembros</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="buscador" type="text" placeholder="Buscar por nombre o CI..." />
+    </div>
+    <select class="filter-select" id="filtro-subtipo">
+      <option value="">Todos los subtipos</option>
+      <option value="Estudiante">Estudiante</option>
+      <option value="Becario">Becario</option>
+      <option value="Preparador">Preparador</option>
+      <option value="Profesor">Profesor</option>
+      <option value="PersonalAdministrativo">Personal Administrativo</option>
+      <option value="Egresado">Egresado</option>
+      <option value="Miembro">Sin subtipo</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>CI</th>
+          <th>Nombre</th>
+          <th>Roles actuales</th>
+          <th>Período</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="skeleton">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+    <div class="pagination" id="paginacion"></div>
+  </div>
+
+  <!-- Modal: Añadir rol -->
+  <div class="modal-backdrop" id="modal-anadir" style="display:none">
+    <div class="modal modal--wide">
+      <div class="modal__header">
+        <h3 class="modal__title">Añadir Rol — <span id="modal-anadir-nombre"></span></h3>
+        <button class="modal__close" id="btn-cerrar-anadir">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="field">
+          <label class="field__label">Tipo de rol</label>
+          <select class="field__input" id="select-subtipo">
+            <option value="">Seleccionar...</option>
+            <option value="estudiante">Estudiante</option>
+            <option value="becario">Becario</option>
+            <option value="preparador">Preparador</option>
+            <option value="profesor">Profesor</option>
+            <option value="personaladmin">Personal Administrativo</option>
+            <option value="egresado">Egresado</option>
+          </select>
+        </div>
+        <div id="campos-subtipo"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" id="btn-cancelar-anadir">Cancelar</button>
+        <button class="btn-primary" id="btn-confirmar-anadir">Añadir Rol</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Gestionar roles actuales -->
+  <div class="modal-backdrop" id="modal-roles" style="display:none">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Roles de <span id="modal-roles-nombre"></span></h3>
+        <button class="modal__close" id="btn-cerrar-roles">✕</button>
+      </div>
+      <div class="modal__body">
+        <div id="lista-roles-actuales"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" id="btn-cancelar-roles">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="vinculaciones.js"></script>
+</body>
+</html>

@@ -2,11 +2,6 @@
    miembros.css — pantalla Mi Perfil y Seguridad
    Variables y base vienen de sidebar.js (inyectado globalmente)
 ============================================================ */
-body {
-  display: flex;
-  min-height: 100vh;
-  margin: 0;
-}
 
 :root {
   --navy:        #1C3D6E;
@@ -24,7 +19,6 @@ body {
   --radius:      12px;
   --shadow:      0 2px 12px rgba(28,61,110,0.08);
 }
-
 
 /* ── Header banner ─────────────────────────────────────────── */
 .page-header {
@@ -263,34 +257,24 @@ body {
   .field-group { grid-template-columns: 1fr; }
 }
 
-.field__input--readonly {
-  border-style: dashed;
-  opacity: 0.75;
-  pointer-events: none;
+/* Atributos de roles activos */
+.vinc-attrs {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 12px;
 }
-
-.modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 200; padding: 16px;
+.vinc-attr {
+  display: flex;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.5;
 }
-.modal {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  width: 100%; max-width: 420px;
+.vinc-attr__label {
+  color: var(--label);
+  white-space: nowrap;
 }
-.modal-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 20px;
-  border-bottom: 0.5px solid var(--border);
-}
-.modal-title { font-size: 16px; font-weight: 600; color: var(--text); }
-.modal-body  { padding: 20px; }
-.btn-ghost {
-  background: none; color: var(--muted);
-  border: 0.5px solid var(--border);
-  border-radius: 8px; padding: 10px 20px;
-  font-size: 14px; cursor: pointer; font-family: inherit;
+.vinc-attr__val {
+  color: var(--text);
+  font-weight: 500;
 }

@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ error: 'Cuenta bloqueada por demasiados intentos fallidos. Contacta al administrador.' });
     }
     if (miembro.estado_de_cuenta === 'Suspendida') {
-      return res.status(403).json({ error: 'Cuenta suspendida. Contacta al administrador.' });
+      return res.status(403).json({ error: 'Cuenta suspendida o pendiente de confirmacion. Contacta al administrador.' });
     }
 
     const clientDCL = new Client({
