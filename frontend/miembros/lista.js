@@ -338,8 +338,25 @@ function generarCamposRol(subtipo, d) {
     ${f('Cód. investigador', 'cod_investigador', d.cod_investigador, 'number')}</div>`;
 
   if (subtipo === 'PersonalAdministrativo') return `<div class="rol-grid">
-    ${f('Cargo', 'cargo', d.cargo)} ${f('Carga semanal', 'carga_semanal', d.carga_semanal, 'number')}
-    ${f('Adscripción presupuestaria', 'adscripcion', d.adscripcion_presupuestaria)}</div>`;
+    <div class="rol-field">
+      <label>Cargo</label>
+      <select class="field__input" id="er-cargo">
+        <option value="Funcionario" ${d.cargo==='Funcionario'?'selected':''}>Funcionario</option>
+        <option value="Administrador" ${d.cargo==='Administrador'?'selected':''}>Administrador</option>
+        <option value="Director" ${d.cargo==='Director'?'selected':''}>Director</option>
+      </select>
+    </div>
+    ${f('Carga semanal', 'carga_semanal', d.carga_semanal, 'number')}
+    <div class="rol-field">
+      <label>Adscripción presupuestaria</label>
+      <select class="field__input" id="er-adscripcion">
+        <option value="Oficina" ${d.adscripcion_presupuestaria==='Oficina'?'selected':''}>Oficina</option>
+        <option value="Secretaria" ${d.adscripcion_presupuestaria==='Secretaria'?'selected':''}>Secretaría</option>
+        <option value="Caja" ${d.adscripcion_presupuestaria==='Caja'?'selected':''}>Caja</option>
+        <option value="Seguridad" ${d.adscripcion_presupuestaria==='Seguridad'?'selected':''}>Seguridad</option>
+      </select>
+    </div>
+  </div>`;
 
   if (subtipo === 'Egresado') return `<div class="rol-grid">
     ${f('Título', 'titulo', d.titulo)} ${f('Año graduación', 'ano_graduacion', d.ano_graduacion, 'number')}

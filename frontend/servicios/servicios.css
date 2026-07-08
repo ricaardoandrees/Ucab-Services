@@ -1,0 +1,226 @@
+/* ============================================================
+   servicios.css — Catálogo de Servicios
+   Tokens del diseño UCAB-Services (consistentes con login.css)
+============================================================ */
+:root {
+  --navy:        #1C3D6E;
+  --navy-dark:   #162F56;
+  --navy-light:  #2a5298;
+  --amber:       #E8A317;
+  --amber-dark:  #c88a10;
+  --bg-page:     #EEF1F7;
+  --bg-card:     #FFFFFF;
+  --bg-input:    #F5F6FA;
+  --border:      #DDE1EC;
+  --text-primary:#1A2B45;
+  --text-muted:  #6B7A99;
+  --label:       #8A95B0;
+  --error:       #D93025;
+  --success:     #1a7f5a;
+  --success-bg:  #f0faf6;
+  --danger:      #D93025;
+  --danger-bg:   #FEF2F2;
+  --radius-card: 12px;
+  --radius-input: 7px;
+  --shadow-card: 0 4px 20px rgba(28, 61, 110, 0.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ── PAGE LAYOUT ─────────────────────────────────────────── */
+.page {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 20px 40px;
+}
+
+/* ── PAGE HEADER ─────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-header__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.page-header__sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* ── CARD ────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.card__header {
+  background-color: var(--navy);
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card__header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card__icon {
+  font-size: 20px;
+}
+
+.card__title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.card__body { padding: 22px; }
+
+/* ── BOTONES ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-input);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary { background-color: var(--navy); color: #fff; }
+.btn-primary:hover { background-color: var(--navy-dark); }
+.btn-amber { background-color: var(--amber); color: #fff; }
+.btn-amber:hover { background-color: var(--amber-dark); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.w-full { width: 100%; justify-content: center; margin-top: 10px;}
+
+/* ── MODAL & FORMS ────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: none; align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+
+.modal {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22); width: 100%; max-width: 600px;
+  max-height: 90vh; overflow-y: auto;
+  animation: modalIn 0.22s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+.modal__header { background: var(--navy); padding: 16px 22px; display: flex; justify-content: space-between; border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.modal__title { color: #fff; font-size: 15px; font-weight: 600; }
+.modal__close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.12s; }
+.modal__close:hover { background: rgba(255,255,255,0.28); }
+.modal__body { padding: 22px; }
+.modal__footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+.btn-secondary { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius-input); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.btn-secondary:hover { background: var(--border); }
+
+/* Fields */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.field { margin-bottom: 16px; }
+.field__label { display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.field__input, .field__select { width: 100%; background-color: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-input); padding: 10px 13px; font-size: 14px; color: var(--text-primary); outline: none; font-family: inherit; }
+.field__input:focus, .field__select:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(28, 61, 110, 0.10); }
+
+/* Steps configurator */
+.steps-configurator { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.steps-configurator h3 { font-size: 14px; color: var(--navy); margin-bottom: 5px; }
+.steps-configurator p { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; }
+.step-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.step-number { background: var(--navy-light); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+
+/* Grid de Servicios */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.service-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.service-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.service-card__badge {
+  background: rgba(232, 163, 23, 0.15);
+  color: var(--amber-dark);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.service-card__price {
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.service-card__title {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.service-card__desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-grow: 1;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.service-card__meta {
+  font-size: 12px;
+  color: var(--label);
+  margin-bottom: 15px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+}

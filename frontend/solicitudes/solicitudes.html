@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Gestión de Solicitudes</title>
+  <link rel="stylesheet" href="../servicios/servicios.css" />
+  <link rel="stylesheet" href="solicitudes.css" />
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/api.js"></script>
+</head>
+<body>
+
+  <!-- Topbar y Sidebar se inyectan dinámicamente vía sidebar.js -->
+
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">📁 Gestión de Solicitudes</h1>
+        <p class="page-header__sub">Realiza seguimiento a tus solicitudes o gestiona las tareas de tu departamento.</p>
+      </div>
+    </div>
+
+    <!-- Panel del Miembro (Crear Solicitud / Ver estado) -->
+    <div class="card" id="panel-miembro">
+      <div class="card__header">
+        <div class="card__header-left">
+          <span class="card__icon">📝</span>
+          <span class="card__title">Mis Solicitudes Activas</span>
+        </div>
+      </div>
+      <div class="card__body">
+        
+        <div id="new-request-container" style="display:none;">
+          <div class="alert-box">
+            Estás a punto de solicitar: <strong id="req-service-name"></strong>
+          </div>
+        <div class="alert alert-box" style="display:block; background:#f8f9fc; border-left: 4px solid var(--navy);">
+          <h4 style="margin-bottom: 5px; color: var(--navy);">Descripción del Servicio</h4>
+          <p id="req-service-desc" style="font-size: 13px; color: var(--text-primary); margin-bottom: 10px;">Cargando descripción...</p>
+          <h4 style="margin-bottom: 5px; color: var(--navy);">Requisitos (Lo que debes cargar)</h4>
+          <p id="req-service-reqs" style="font-size: 13px; color: var(--text-primary);">Cargando requisitos...</p>
+        </div>
+        <form id="form-solicitud">
+            <input type="hidden" id="req_nombre">
+            <input type="hidden" id="req_numero">
+            
+            <div class="field">
+              <label class="field__label">Cargar Recaudos (PDF/Imagen)</label>
+              <div class="file-drop-area">
+                <span class="file-msg">Arrastra tus archivos aquí o haz clic para subir</span>
+                <input type="file" id="req_docs" multiple accept=".pdf,.png,.jpg" class="file-input">
+              </div>
+              <ul id="file-list" class="file-list"></ul>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              <button type="button" class="btn btn-secondary" onclick="cancelarSolicitud()">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Procesar Solicitud</button>
+            </div>
+          </form>
+          <hr style="margin:30px 0; border:0; border-top:1px solid var(--border);" />
+        </div>
+
+        <div id="my-requests-list">
+          <p style="color:var(--text-muted); font-size:14px; text-align:center; padding: 20px;">Aún no tienes solicitudes en curso.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel del Funcionario (Bandeja de Entrada) -->
+    <div class="card" id="panel-funcionario" style="display:none;">
+      <div class="card__header">
+        <div class="card__header-left">
+          <span class="card__icon">📥</span>
+          <span class="card__title">Bandeja de Entrada Departamental</span>
+        </div>
+      </div>
+      <div class="card__body" style="padding:0;">
+        <div class="table-wrap">
+          <table id="tabla-bandeja" aria-label="Tabla de bandeja">
+            <thead>
+              <tr>
+                <th>Fecha Solicitud</th>
+                <th>Servicio</th>
+                <th>Solicitante (CI)</th>
+                <th>Paso a Completar</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="inbox-tbody">
+              <!-- Filas renderizadas en JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="solicitudes.js"></script>
+</body>
+</html>

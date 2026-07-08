@@ -146,11 +146,27 @@ const CAMPOS = {
       <div class="field"><label class="field__label">Cód. investigador</label><input class="field__input" id="f-codinv" type="number" placeholder="Opcional" /></div>
     </div>`,
   personaladmin: `
+    <p style="font-size:12px;color:#6B7A99;background:#F5F6FA;padding:8px 10px;border-radius:6px;margin-bottom:12px">ℹ️ Los valores de Cargo y Adscripción están restringidos a las opciones permitidas por el sistema.</p>
     <div class="grid-2">
-      <div class="field"><label class="field__label">Cargo</label><input class="field__input" id="f-cargo" type="text" placeholder="Director, Cajero..." /></div>
+      <div class="field"><label class="field__label">Cargo</label>
+        <select class="field__input" id="f-cargo">
+          <option value="">Seleccionar...</option>
+          <option value="Administrador">Administrador</option>
+          <option value="Director">Director</option>
+          <option value="Funcionario">Funcionario</option>
+        </select>
+      </div>
       <div class="field"><label class="field__label">Carga semanal (hrs)</label><input class="field__input" id="f-carga-semanal" type="number" /></div>
     </div>
-    <div class="field"><label class="field__label">Adscripción presupuestaria</label><input class="field__input" id="f-adscripcion" type="text" /></div>`,
+    <div class="field"><label class="field__label">Adscripción presupuestaria</label>
+      <select class="field__input" id="f-adscripcion">
+        <option value="">Seleccionar...</option>
+        <option value="Secretaria">Secretaría</option>
+        <option value="Caja">Caja</option>
+        <option value="Seguridad">Seguridad</option>
+        <option value="Oficina">Oficina General</option>
+      </select>
+    </div>`,
   egresado: `
     <div class="grid-2">
       <div class="field"><label class="field__label">Título</label><input class="field__input" id="f-titulo" type="text" /></div>

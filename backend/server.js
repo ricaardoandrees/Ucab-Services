@@ -15,6 +15,7 @@ app.use('/api/beneficiarios', require('./routes/beneficiarios'));
 app.use('/api/infraestructura', require('./routes/infraestructura'));
 app.use('/api/vehiculos', require('./routes/vehiculos'));
 app.use('/api/voluntariado', require('./routes/voluntariado'));
+app.use('/api/servicios', require('./routes/servicios'));
 // app.use('/api/solicitudes',   require('./routes/solicitudes'));
 // app.use('/api/financiero',    require('./routes/financiero'));
 // app.use('/api/vehiculos',     require('./routes/vehiculos'));

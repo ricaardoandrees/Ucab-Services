@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetId = e.target.getAttribute('data-tab');
       document.getElementById(targetId).classList.add('active');
 
-      if (targetId === 'tab-servicios') loadServicios();
+
       if (targetId === 'tab-espacios') loadEspacios();
       if (targetId === 'tab-edificaciones') loadEdificaciones();
       if (targetId === 'tab-sedes') loadSedes();
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-add-aliado')?.addEventListener('click', openModalAliado);
 
   // Cargar tab inicial
-  loadServicios();
+  loadEspacios();
 });
 
 // ── Fetch Helper ─────────────────────────────────────────
@@ -78,37 +78,6 @@ async function apiFetch(method, path, body = null) {
   return data;
 }
 
-// ── 1. SERVICIOS ──────────────────────────────────────────
-async function loadServicios() {
-  const grid = document.getElementById('grid-servicios');
-  grid.innerHTML = `<div class="empty-state"><p class="empty-state__msg">Cargando...</p></div>`;
-  try {
-    const data = await apiFetch('GET', '/servicios');
-    if (data.servicios.length === 0) {
-      grid.innerHTML = `<div class="empty-state"><p class="empty-state__msg">No hay servicios públicos disponibles.</p></div>`;
-      return;
-    }
-    grid.innerHTML = data.servicios.map(s => `
-      <div class="item-card">
-        <div class="item-card__header">
-          <span class="item-card__title">${esc(s.nombre)}</span>
-          <span class="badge badge--green">Disponible</span>
-        </div>
-        <div class="item-card__body">
-          <p class="item-card__desc">${esc(s.descripcion || 'Sin descripción')}</p>
-          <div class="item-card__meta">
-            <span class="item-card__meta-item">📍 Sede: ${esc(s.nombre_sede)}</span>
-            <span class="item-card__meta-item">🔖 Categoría: ${esc(s.nombre_categoria)}</span>
-            <span class="item-card__meta-item">🏢 Entidad: ${esc(s.entidad_nombre)}</span>
-            <span class="item-card__meta-item">💲 Precio Base: $${s.precio_base}</span>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  } catch (err) {
-    grid.innerHTML = `<div class="empty-state"><p class="empty-state__msg">${err.message}</p></div>`;
-  }
-}
 
 // ── 2. ESPACIOS FÍSICOS ───────────────────────────────────
 async function loadEspacios() {

@@ -735,3 +735,52 @@ EXECUTE FUNCTION fn_disponibilidad_puesto();
 -- trg_actualizar_disponibilidad_reserva) se reemplaza por estos dos.
 DROP TRIGGER IF EXISTS trg_actualizar_disponibilidad_reserva ON Reserva;
 DROP FUNCTION IF EXISTS fn_actualizar_disponibilidad_reserva();
+-- =====================================================================
+-- TRIGGERS PARA SOLICITUDES Y PASOS DE ACTIVIDAD
+-- =====================================================================
+
+-- 1) Generar pasos autom�ticamente desde la plantilla al crear solicitud
+CREATE OR REPLACE FUNCTION fn_generar_pasos_solicitud()
+RETURNS TRIGGER AS $body
+BEGIN
+    INSERT INTO Paso_Actividad (numero_paso, fecha_hora_creacion_solicitud, estado, descripcion, unidad_responsable, CI)
+    SELECT numero_paso, NEW.fecha_hora_creacion, 'Pendiente', descripcion, unidad_responsable, NULL
+    FROM PlantillaPaso
+    WHERE nombre_servicio = NEW.nombre_servicio AND numero_servicio = NEW.numero_servicio;
+    
+    RETURN NEW;
+END;
+$body LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_generar_pasos_solicitud
+AFTER INSERT ON Solicitud
+FOR EACH ROW
+EXECUTE FUNCTION fn_generar_pasos_solicitud();
+
+
+-- 2) Validar que los pasos se completen de manera secuencial (RN-34)
+CREATE OR REPLACE FUNCTION fn_validar_secuencia_pasos()
+RETURNS TRIGGER AS $body
+DECLARE
+    pasos_pendientes_previos INT;
+BEGIN
+    IF NEW.estado = 'Completado' AND OLD.estado != 'Completado' THEN
+        SELECT COUNT(*) INTO pasos_pendientes_previos
+        FROM Paso_Actividad
+        WHERE fecha_hora_creacion_solicitud = NEW.fecha_hora_creacion_solicitud
+          AND numero_paso < NEW.numero_paso
+          AND estado != 'Completado';
+          
+        IF pasos_pendientes_previos > 0 THEN
+            RAISE EXCEPTION 'No se puede completar este paso porque hay pasos anteriores pendientes.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$body LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validar_secuencia_pasos
+BEFORE UPDATE ON Paso_Actividad
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_secuencia_pasos();
+

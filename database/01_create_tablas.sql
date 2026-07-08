@@ -76,7 +76,7 @@ CREATE TABLE Profesor (
 
 CREATE TABLE PersonalAdministrativo (
     CI VARCHAR(15) NOT NULL,
-    adscripcion_presupuestaria VARCHAR(50) NOT NULL CHECK (adscripcion_presupuestaria IN ('Secretaría', 'Caja', 'Seguridad', 'Oficina')),
+    adscripcion_presupuestaria VARCHAR(50) NOT NULL CHECK (adscripcion_presupuestaria IN ('Secretaria', 'Caja', 'Seguridad', 'Oficina')),
     cargo VARCHAR(50) NOT NULL CHECK (cargo IN ('Administrador', 'Director', 'Funcionario')),
     carga_semanal INT,
 
@@ -313,12 +313,35 @@ CREATE TABLE Paso_Actividad (
     fecha_hora_creacion_solicitud TIMESTAMP NOT NULL,
     estado VARCHAR(15) NOT NULL CHECK (estado IN ('Pendiente','Completado')),
     descripcion VARCHAR(200) NOT NULL,
-    CI VARCHAR(15) NOT NULL,
+    unidad_responsable VARCHAR(50) NOT NULL CHECK (unidad_responsable IN ('Secretaria', 'Caja', 'Seguridad', 'Oficina')),
+    CI VARCHAR(15),
+    fecha_hora_inicio TIMESTAMP,
     fecha_hora_finalizado TIMESTAMP,
 
     CONSTRAINT PK_PASO_ACTIVIDAD PRIMARY KEY (numero_paso, fecha_hora_creacion_solicitud),
     CONSTRAINT FK_PASO_SOLICITUD FOREIGN KEY (fecha_hora_creacion_solicitud) REFERENCES Solicitud(fecha_hora_creacion) ON DELETE CASCADE,
     CONSTRAINT FK_PASO_MIEMBRO FOREIGN KEY (CI) REFERENCES Miembro(CI)
+);
+
+CREATE TABLE PlantillaPaso (
+    id_plantilla SERIAL,
+    nombre_servicio VARCHAR(50) NOT NULL,
+    numero_servicio INT NOT NULL,
+    numero_paso INT NOT NULL,
+    descripcion VARCHAR(200) NOT NULL,
+    unidad_responsable VARCHAR(50) NOT NULL CHECK (unidad_responsable IN ('Secretaria', 'Caja', 'Seguridad', 'Oficina')),
+
+    CONSTRAINT PK_PLANTILLAPASO PRIMARY KEY (id_plantilla),
+    CONSTRAINT FK_PLANTILLAPASO_SERVICIO FOREIGN KEY (nombre_servicio, numero_servicio) REFERENCES Servicio(nombre, numero_servicio) ON DELETE CASCADE
+);
+
+CREATE TABLE Documento_Solicitud (
+    id_documento SERIAL,
+    fecha_hora_creacion_solicitud TIMESTAMP NOT NULL,
+    ruta_archivo VARCHAR(200) NOT NULL,
+
+    CONSTRAINT PK_DOCUMENTO_SOLICITUD PRIMARY KEY (id_documento),
+    CONSTRAINT FK_DOCUMENTO_SOLICITUD FOREIGN KEY (fecha_hora_creacion_solicitud) REFERENCES Solicitud(fecha_hora_creacion) ON DELETE CASCADE
 );
 
 CREATE TABLE Sede (

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Catálogo de Servicios</title>
+  <link rel="stylesheet" href="servicios.css" />
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/api.js"></script>
+</head>
+<body>
+
+  <!-- Topbar y Sidebar se inyectan dinámicamente vía sidebar.js -->
+
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">📋 Catálogo de Servicios</h1>
+        <p class="page-header__sub">Explora los servicios que la UCAB tiene para ti.</p>
+      </div>
+      <button class="btn btn-amber" id="btn-nuevo-servicio" style="display:none">+ Publicar Nuevo Servicio</button>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <div class="card__header-left">
+          <span class="card__icon">🔎</span>
+          <span class="card__title">Filtros de búsqueda</span>
+        </div>
+      </div>
+      <div class="card__body" style="padding: 15px 22px;">
+        <div style="display: flex; gap: 15px; align-items: flex-end;">
+          <div class="field" style="flex: 1; margin: 0;">
+            <label class="field__label">Categoría</label>
+            <select class="field__select" id="filter-category">
+              <option value="todas">Todas</option>
+              <option value="Salud">Salud</option>
+              <option value="Educacion Continua">Educación Continua</option>
+              <option value="Deporte">Deporte</option>
+              <option value="Cultura">Cultura</option>
+              <option value="Estacionamiento">Estacionamiento</option>
+            </select>
+          </div>
+          <div class="field" style="flex: 2; margin: 0;">
+            <label class="field__label">Buscar</label>
+            <input type="text" class="field__input" id="search-service" placeholder="Nombre del servicio...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="services-grid" id="services-grid">
+      <!-- Tarjetas renderizadas vía JS -->
+      <p style="color: var(--text-muted); font-size: 14px;">Cargando servicios...</p>
+    </div>
+  </div>
+
+  <!-- MODAL: Nuevo Servicio -->
+  <div class="modal-backdrop" id="modal-servicio" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">Publicar Nuevo Servicio</span>
+        <button class="modal__close" id="btn-close-modal" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="form-servicio" novalidate>
+        <div class="modal__body">
+          <div class="form-grid">
+            <div class="field" style="grid-column: span 2">
+              <label class="field__label">Nombre del Servicio *</label>
+              <input class="field__input" id="s_nombre" type="text" required />
+            </div>
+          </div>
+          
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Categoría *</label>
+              <select class="field__select" id="s_categoria" required>
+                <option value="Salud">Salud</option>
+                <option value="Educacion Continua">Educación Continua</option>
+                <option value="Cultura">Cultura</option>
+                <option value="Deporte">Deporte</option>
+                <option value="Estacionamiento">Estacionamiento</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label">Precio Base ($) *</label>
+              <input class="field__input" id="s_precio" type="number" step="0.01" required />
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Sede *</label>
+              <select class="field__select" id="s_sede" required>
+                <option value="Montalban">Montalbán</option>
+                <option value="Guayana">Guayana</option>
+                <option value="Maracay">Maracay</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label">ID Entidad Propietaria *</label>
+              <input class="field__input" id="s_ep" type="number" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Requisitos Adicionales</label>
+            <input class="field__input" id="s_requisitos" type="text" placeholder="Ej. Carnet vigente" />
+          </div>
+
+          <div class="field">
+            <label class="field__label">Descripción Corta *</label>
+            <input class="field__input" id="s_descripcion" type="text" required />
+          </div>
+
+          <div class="steps-configurator">
+            <h3>Plantilla de Pasos (Receta)</h3>
+            <p>Define los departamentos responsables de procesar este servicio.</p>
+            <div id="steps-container">
+              <div class="step-row">
+                <span class="step-number">1</span>
+                <input type="text" class="field__input step-desc" placeholder="Descripción del paso" style="flex:2" required>
+                <select class="field__select step-unidad" style="flex:1" required>
+                  <option value="Caja">Caja</option>
+                  <option value="Secretaria">Secretaría</option>
+                  <option value="Seguridad">Seguridad</option>
+                  <option value="Oficina">Oficina General</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-step" style="margin-top: 10px;">+ Agregar Paso</button>
+          </div>
+
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn-secondary" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear Servicio</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="servicios.js"></script>
+</body>
+</html>
