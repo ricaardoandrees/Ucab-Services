@@ -76,8 +76,8 @@ CREATE TABLE Profesor (
 
 CREATE TABLE PersonalAdministrativo (
     CI VARCHAR(15) NOT NULL,
-    adscripcion_presupuestaria VARCHAR(50) NOT NULL,
-    cargo VARCHAR(50) NOT NULL,
+    adscripcion_presupuestaria VARCHAR(50) NOT NULL CHECK (adscripcion_presupuestaria IN ('Secretaría', 'Caja', 'Seguridad', 'Oficina')),
+    cargo VARCHAR(50) NOT NULL CHECK (cargo IN ('Administrador', 'Director', 'Funcionario')),
     carga_semanal INT,
 
     CONSTRAINT PK_PERSONALADMINISTRATIVO PRIMARY KEY (CI),
