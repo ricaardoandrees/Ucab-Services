@@ -45,6 +45,17 @@
             <input type="hidden" id="req_nombre">
             <input type="hidden" id="req_numero">
             
+            <!-- CAMPOS ESPECIALES PARA RESERVAS -->
+            <div id="reserva-section" style="display:none; background: var(--bg-alt); padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid var(--border);">
+              <h4 style="margin-bottom:10px; color:var(--navy);">Detalles de la Reserva</h4>
+              <p id="reserva-desc" style="font-size:13px; margin-bottom:15px; color:var(--text-primary);"></p>
+              
+              <div class="field">
+                <label class="field__label">Fecha y Hora de Llegada Esperada</label>
+                <input type="datetime-local" id="req_fecha_llegada" class="field__input">
+              </div>
+            </div>
+
             <div class="field">
               <label class="field__label">Cargar Recaudos (PDF/Imagen)</label>
               <div class="file-drop-area">

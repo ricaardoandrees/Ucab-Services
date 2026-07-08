@@ -96,6 +96,27 @@ router.post('/:nombre/:numero/solicitudes', auth, async (req, res) => {
       }
     }
 
+    // 3. Crear Reserva si viene en el body (HU-97)
+    if (req.body.reserva) {
+      const { fecha_llegada, espacio, puesto } = req.body.reserva;
+      
+      let q = `INSERT INTO Reserva (nombre_servicio, numero_servicio, fecha_hora, fecha_hora_creacion_solicitud`;
+      let v = `VALUES ($1, $2, $3, $4`;
+      let params = [nombre, numero, fecha_llegada, fechaHora];
+
+      if (puesto) {
+        q += `, numero_puesto, nombre_estacionamiento, nombre_sede_puesto)`;
+        v += `, $5, $6, $7)`;
+        params.push(puesto.numero, puesto.estacionamiento, puesto.sede);
+      } else if (espacio) {
+        q += `, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio)`;
+        v += `, $5, $6, $7, $8)`;
+        params.push(espacio.numero, espacio.edificio, espacio.direccion, espacio.sede);
+      }
+
+      await pool.query(q + " " + v, params);
+    }
+
     await pool.query('COMMIT');
     res.status(201).json({ 
       mensaje: 'Solicitud creada con éxito. Los pasos se generaron automáticamente.',

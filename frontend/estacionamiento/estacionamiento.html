@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Estacionamiento</title>
+  <link rel="stylesheet" href="../servicios/servicios.css" />
+  <link rel="stylesheet" href="estacionamiento.css" />
+  <script src="../js/auth-guard.js"></script>
+</head>
+<body>
+  <div class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-header__title">🚗 Estacionamiento</h1>
+          <p class="page-header__sub">Consulta disponibilidad de puestos y gestiona espacios físicos.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-nuevo-estacionamiento" style="display:none">+ Añadir Estacionamiento</button>
+      </div>
+
+
+
+      <!-- Buscador para Cliente / Admin -->
+      <div style="display:flex; gap:15px; align-items:flex-end; margin-bottom: 30px; background: var(--bg-card); padding: 20px; border-radius: var(--radius-card); box-shadow: var(--shadow-card); border: 1px solid var(--border);">
+        <div class="field" style="flex:1; margin:0;">
+          <label class="field__label">Sede</label>
+          <select id="filtro-sede" class="field__input">
+            <option value="Montalban">Montalbán</option>
+            <option value="Guayana">Guayana</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1; margin:0;">
+          <label class="field__label">Estacionamiento</label>
+          <select id="filtro-estacionamiento" class="field__input">
+            <option value="">Seleccione Sede Primero</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="btn-buscar">Consultar Mapa</button>
+        <button class="btn btn-amber" id="btn-add-puestos" style="display:none;">+ Añadir Puestos</button>
+      </div>
+
+      <!-- Mapa de Puestos -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h2 style="font-size: 18px; color: var(--navy);">Plano del Estacionamiento</h2>
+        <div class="leyenda" style="display:flex; gap:10px;">
+          <span style="background:var(--success-bg); color:var(--success); padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border: 1px solid var(--success);">Libre</span>
+          <span style="background:var(--danger-bg); color:var(--danger); padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border: 1px solid var(--danger);">Ocupado/Reservado</span>
+          <span style="background:#fffdf5; color:var(--amber-dark); padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; border: 1px solid var(--amber);">Mantenimiento</span>
+        </div>
+      </div>
+      
+      <div id="grid-puestos" class="parking-grid">
+        <div class="empty-state" style="grid-column: 1 / -1; background: var(--bg-card); padding: 40px; border-radius: var(--radius-card); text-align: center; border: 1px dashed var(--label);">
+          <p class="empty-state__msg" style="color: var(--text-muted);">Selecciona un estacionamiento y haz clic en Consultar.</p>
+        </div>
+      </div>
+
+    </div>
+
+  <!-- Modal Nuevo Estacionamiento (Admin) -->
+  <div class="modal" id="modal-est">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 style="color:var(--navy); font-size:18px;">Nuevo Estacionamiento</h2>
+        <span class="close-modal" id="btn-close-est" style="font-size:24px; cursor:pointer;">&times;</span>
+      </div>
+      <form id="form-est">
+        <div class="field">
+          <label class="field__label">Nombre (Ej: Norte, Postgrado)</label>
+          <input type="text" id="est_nombre" class="field__input" required>
+        </div>
+        <div class="field">
+          <label class="field__label">Sede</label>
+          <select id="est_sede" class="field__input">
+            <option value="Montalban">Montalbán</option>
+            <option value="Guayana">Guayana</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label">Ubicación exacta</label>
+          <input type="text" id="est_ubic" class="field__input" required>
+        </div>
+        <div class="field">
+          <label class="field__label">Capacidad Máxima</label>
+          <input type="number" id="est_capacidad" class="field__input" min="1" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top:10px;">Crear Estacionamiento</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Añadir Puestos (Admin) -->
+  <div class="modal" id="modal-puesto">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 style="color:var(--navy); font-size:18px;">Añadir Puesto</h2>
+        <span class="close-modal" id="btn-close-puesto" style="font-size:24px; cursor:pointer;">&times;</span>
+      </div>
+      <form id="form-puesto">
+        <div class="field">
+          <label class="field__label">Número de Puesto</label>
+          <input type="number" id="puesto_numero" class="field__input" required>
+        </div>
+        <div class="field">
+          <label class="field__label">Tipo de Vehículo</label>
+          <select id="puesto_tipo" class="field__input">
+            <option value="Carro">Carro</option>
+            <option value="Moto">Moto</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top:10px;">Añadir Puesto</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="estacionamiento.js"></script>
+</body>
+</html>

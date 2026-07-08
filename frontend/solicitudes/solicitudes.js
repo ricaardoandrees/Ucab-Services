@@ -27,20 +27,45 @@ function checkAuthAndRouting() {
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
   
-  if (action === 'new') {
-    const srvName = params.get('srv');
-    const srvNum = params.get('num');
+  if (action === 'new' || action === 'new_reserva') {
+    let srvName = params.get('srv');
+    let srvNum = params.get('num');
     
     document.getElementById('new-request-container').style.display = 'block';
-    document.getElementById('req-service-name').textContent = srvName;
-    document.getElementById('req_nombre').value = srvName;
-    document.getElementById('req_numero').value = srvNum;
+
+    // Lógica de Reserva (Estacionamiento / Espacio)
+    const puesto = params.get('puesto');
+    const est = params.get('est');
+    const sede = params.get('sede');
+    
+    if (puesto) {
+      document.getElementById('reserva-section').style.display = 'block';
+      document.getElementById('reserva-desc').textContent = `Puesto asignado: ${puesto} en ${est} (${sede}). Por favor indica la fecha y hora en la que llegarás.`;
+      document.getElementById('req_fecha_llegada').required = true;
+    }
 
     api.get('/servicios').then(servicios => {
-      const s = servicios.find(srv => srv.nombre === srvName && String(srv.numero_servicio) === srvNum);
+      let s;
+      if (action === 'new_reserva' && !srvName) {
+        // Buscar el servicio de estacionamiento automáticamente
+        s = servicios.find(srv => srv.nombre.toLowerCase().includes('estacionamiento'));
+        if (s) {
+          srvName = s.nombre;
+          srvNum = s.numero_servicio;
+        }
+      } else {
+        s = servicios.find(srv => srv.nombre === srvName && String(srv.numero_servicio) === String(srvNum));
+      }
+
       if (s) {
+        document.getElementById('req-service-name').textContent = srvName;
+        document.getElementById('req_nombre').value = srvName;
+        document.getElementById('req_numero').value = srvNum;
         document.getElementById('req-service-desc').textContent = s.descripcion;
         document.getElementById('req-service-reqs').textContent = s.requisitos;
+      } else {
+        document.getElementById('req-service-name').textContent = 'Servicio no encontrado';
+        document.getElementById('req-service-desc').textContent = 'Por favor, asegúrate de que exista un servicio de Reserva de Estacionamiento en el catálogo.';
       }
     }).catch(err => console.error(err));
   }
@@ -93,9 +118,26 @@ function setupFileInput() {
     
     const nombre = document.getElementById('req_nombre').value;
     const numero = document.getElementById('req_numero').value;
+    
+    const params = new URLSearchParams(window.location.search);
+    let reservaPayload = null;
+    
+    if (params.get('puesto')) {
+      reservaPayload = {
+        fecha_llegada: document.getElementById('req_fecha_llegada').value,
+        puesto: {
+          numero: params.get('puesto'),
+          estacionamiento: params.get('est'),
+          sede: params.get('sede')
+        }
+      };
+    }
 
     try {
-      await api.post(`/servicios/${encodeURIComponent(nombre)}/${numero}/solicitudes`, { documentos: uploadedDocs });
+      await api.post(`/servicios/${encodeURIComponent(nombre)}/${numero}/solicitudes`, { 
+        documentos: uploadedDocs,
+        reserva: reservaPayload
+      });
 
       alert('¡Solicitud procesada con éxito!');
       cancelarSolicitud();

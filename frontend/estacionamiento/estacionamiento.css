@@ -1,0 +1,107 @@
+/* estacionamiento.css */
+.parking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 15px;
+  padding: 15px 0;
+}
+
+.parking-spot {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-input);
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(28, 61, 110, 0.05);
+}
+
+.parking-spot:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(28, 61, 110, 0.15);
+  border-color: var(--navy-light);
+}
+
+.parking-spot.status-libre {
+  border-top: 6px solid var(--success);
+}
+.parking-spot.status-libre:hover {
+  background: var(--success-bg);
+  border-color: var(--success);
+}
+
+.parking-spot.status-ocupado,
+.parking-spot.status-reservado {
+  border-top: 6px solid var(--danger);
+  opacity: 0.75;
+  cursor: not-allowed;
+  background: var(--bg-page);
+}
+
+.parking-spot.status-mantenimiento {
+  border-top: 6px solid var(--amber);
+  opacity: 0.85;
+  background: #fffdf5;
+}
+
+.spot-number {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 5px;
+}
+
+.spot-type {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-page);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Modals */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(26, 43, 69, 0.6);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal.show { display: flex; animation: fadeIn 0.2s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--radius-card);
+  width: 90%;
+  box-shadow: var(--shadow-card);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}

@@ -19,7 +19,7 @@ app.use('/api/servicios', require('./routes/servicios'));
 // app.use('/api/solicitudes',   require('./routes/solicitudes'));
 // app.use('/api/financiero',    require('./routes/financiero'));
 // app.use('/api/vehiculos',     require('./routes/vehiculos'));
-// app.use('/api/estacionamiento',require('./routes/estacionamiento'));
+app.use('/api/estacionamiento', require('./routes/estacionamiento'));
 // app.use('/api/voluntariado',  require('./routes/voluntariado'));
 // app.use('/api/bolsatrabajo',  require('./routes/bolsatrabajo'));
 // app.use('/api/reportes',      require('./routes/reportes'));
