@@ -116,6 +116,16 @@ router.post('/:nombre/:numero/solicitudes', auth, async (req, res) => {
 
       await pool.query(q + " " + v, params);
     }
+    // 4. Insertar Acompañantes si vienen en el body
+    if (req.body.acompanantes && req.body.acompanantes.length > 0) {
+      const queryAcomp = `
+        INSERT INTO Acompanante (documento_identidad, nombre, fecha_hora_creacion)
+        VALUES ($1, $2, $3)
+      `;
+      for (const ac of req.body.acompanantes) {
+        await pool.query(queryAcomp, [ac.documento_identidad, ac.nombre, fechaHora]);
+      }
+    }
 
     await pool.query('COMMIT');
     res.status(201).json({ 

@@ -56,6 +56,19 @@
               </div>
             </div>
 
+            <!-- ACOMPAÑANTES (OPCIONAL) -->
+            <div id="acompanantes-section" style="display:none; background: var(--bg-card); padding:15px; border-radius:8px; margin-bottom:20px; border: 1px dashed var(--border);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="color:var(--navy); margin:0;">Acompañantes / Invitados</h4>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-add-acomp">+ Añadir Persona</button>
+              </div>
+              <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">Registra a las personas que ingresarán contigo a este espacio.</p>
+              
+              <div id="acompanantes-list" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Filas dinámicas irán aquí -->
+              </div>
+            </div>
+
             <div class="field">
               <label class="field__label">Cargar Recaudos (PDF/Imagen)</label>
               <div class="file-drop-area">

@@ -63,6 +63,12 @@ function checkAuthAndRouting() {
         document.getElementById('req_numero').value = srvNum;
         document.getElementById('req-service-desc').textContent = s.descripcion;
         document.getElementById('req-service-reqs').textContent = s.requisitos;
+
+        // Mostrar sección de acompañantes si es alquiler/reserva de espacio (NO estacionamiento)
+        const nameLower = s.nombre.toLowerCase();
+        if ((nameLower.includes('alquiler') || nameLower.includes('uso') || nameLower.includes('espacio') || nameLower.includes('reserva')) && !nameLower.includes('estacionamiento')) {
+          document.getElementById('acompanantes-section').style.display = 'block';
+        }
       } else {
         document.getElementById('req-service-name').textContent = 'Servicio no encontrado';
         document.getElementById('req-service-desc').textContent = 'Por favor, asegúrate de que exista un servicio de Reserva de Estacionamiento en el catálogo.';
@@ -113,6 +119,8 @@ function setupFileInput() {
     });
   });
 
+  setupAcompanantes();
+
   document.getElementById('form-solicitud').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -133,18 +141,49 @@ function setupFileInput() {
       };
     }
 
+    // Extraer acompañantes
+    const acompanantes = [];
+    document.querySelectorAll('.acomp-row').forEach(row => {
+      const doc = row.querySelector('.acomp-doc').value.trim();
+      const nom = row.querySelector('.acomp-name').value.trim();
+      if (doc && nom) {
+        acompanantes.push({ documento_identidad: doc, nombre: nom });
+      }
+    });
+
     try {
       await api.post(`/servicios/${encodeURIComponent(nombre)}/${numero}/solicitudes`, { 
         documentos: uploadedDocs,
-        reserva: reservaPayload
+        reserva: reservaPayload,
+        acompanantes: acompanantes.length > 0 ? acompanantes : null
       });
 
       alert('¡Solicitud procesada con éxito!');
       cancelarSolicitud();
-      // Recargar lista si la tuviéramos
+      loadMyRequests();
+
     } catch (err) {
       alert(err.message);
     }
+  });
+}
+
+function setupAcompanantes() {
+  const btnAdd = document.getElementById('btn-add-acomp');
+  const list = document.getElementById('acompanantes-list');
+  if (!btnAdd || !list) return;
+
+  btnAdd.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'acomp-row';
+    row.style = 'display:flex; gap:10px; align-items:center;';
+    
+    row.innerHTML = `
+      <input type="text" class="field__input acomp-doc" placeholder="Documento ID" style="flex:1" required>
+      <input type="text" class="field__input acomp-name" placeholder="Nombre Completo" style="flex:2" required>
+      <button type="button" class="btn btn-secondary btn-sm" style="color:var(--danger)" onclick="this.parentElement.remove()">✖</button>
+    `;
+    list.appendChild(row);
   });
 }
 
