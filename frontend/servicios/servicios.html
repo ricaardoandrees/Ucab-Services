@@ -113,6 +113,19 @@
             <input class="field__input" id="s_descripcion" type="text" required />
           </div>
 
+          <div class="field">
+            <label class="field__label" style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="s_tiene_espacio" style="width:auto;">
+              Este servicio corresponde a un espacio físico fijo (alquiler de auditorio, cancha, etc.)
+            </label>
+          </div>
+          <div class="field" id="s_espacio_container" style="display:none;">
+            <label class="field__label">Espacio Físico</label>
+            <select class="field__select" id="s_espacio">
+              <option value="">Cargando espacios...</option>
+            </select>
+          </div>
+
           <div class="steps-configurator">
             <h3>Plantilla de Pasos (Receta)</h3>
             <p>Define los departamentos responsables de procesar este servicio.</p>

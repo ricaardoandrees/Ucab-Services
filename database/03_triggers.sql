@@ -784,3 +784,51 @@ BEFORE UPDATE ON Paso_Actividad
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_secuencia_pasos();
 
+-- ------------------------------------------------------------
+-- RN-XX: Validar bloques horarios de Reservas
+-- Evita solapamiento de reservas en espacios o puestos
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_validar_bloque_horario()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_conflicto INT;
+BEGIN
+    -- Verificar si existe alguna reserva confirmada o pendiente que choque en tiempo para el mismo ESPACIO FÍSICO
+    IF NEW.numero_espacio IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_conflicto
+        FROM Reserva
+        WHERE numero_espacio = NEW.numero_espacio
+          AND nombre_edif = NEW.nombre_edif
+          AND nombre_sede_espacio = NEW.nombre_sede_espacio
+          AND estado IN ('Pendiente', 'Confirmada')
+          -- Lógica de solapamiento: InicioA < FinB Y FinA > InicioB
+          AND (NEW.fecha_hora < fecha_hora_fin AND NEW.fecha_hora_fin > fecha_hora);
+          
+        IF v_conflicto > 0 THEN
+            RAISE EXCEPTION 'El espacio físico ya se encuentra reservado total o parcialmente durante este bloque horario.';
+        END IF;
+    END IF;
+
+    -- Verificar para PUESTO DE ESTACIONAMIENTO
+    IF NEW.numero_puesto IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_conflicto
+        FROM Reserva
+        WHERE numero_puesto = NEW.numero_puesto
+          AND nombre_estacionamiento = NEW.nombre_estacionamiento
+          AND nombre_sede_puesto = NEW.nombre_sede_puesto
+          AND estado IN ('Pendiente', 'Confirmada')
+          AND (NEW.fecha_hora < fecha_hora_fin AND NEW.fecha_hora_fin > fecha_hora);
+          
+        IF v_conflicto > 0 THEN
+            RAISE EXCEPTION 'El puesto de estacionamiento ya se encuentra reservado durante este bloque horario.';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_validar_bloque_horario
+BEFORE INSERT OR UPDATE ON Reserva
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_bloque_horario();

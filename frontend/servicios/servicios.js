@@ -84,6 +84,30 @@ function setupEventListeners() {
   }
   btnClose.addEventListener('click', () => modal.classList.remove('open'));
 
+  // Espacio físico asociado (opcional)
+  const chkTieneEspacio = document.getElementById('s_tiene_espacio');
+  const espacioContainer = document.getElementById('s_espacio_container');
+  const selectEspacio = document.getElementById('s_espacio');
+  let espaciosCargados = false;
+
+  chkTieneEspacio.addEventListener('change', () => {
+    espacioContainer.style.display = chkTieneEspacio.checked ? 'block' : 'none';
+    if (chkTieneEspacio.checked && !espaciosCargados) {
+      espaciosCargados = true;
+      api.get('/infraestructura/espacios').then(data => {
+        selectEspacio.innerHTML = '<option value="">Seleccione un espacio</option>';
+        data.espacios.forEach(e => {
+          const opt = document.createElement('option');
+          opt.value = JSON.stringify({ numero: e.numero, edificio: e.nombre_edif, direccion: e.direccion_exacta, sede: e.nombre_sede });
+          opt.textContent = `${e.nombre} — ${e.nombre_edif} (${e.nombre_sede})`;
+          selectEspacio.appendChild(opt);
+        });
+      }).catch(() => {
+        selectEspacio.innerHTML = '<option value="">Error al cargar espacios</option>';
+      });
+    }
+  });
+
   // Filtros
   document.getElementById('filter-category').addEventListener('change', filterServices);
   document.getElementById('search-service').addEventListener('input', filterServices);
@@ -122,6 +146,13 @@ function setupEventListeners() {
       descripcion: document.getElementById('s_descripcion').value
     };
 
+    const tieneEspacio = document.getElementById('s_tiene_espacio').checked;
+    const espacioValue = document.getElementById('s_espacio').value;
+    if (tieneEspacio && !espacioValue) {
+      return alert('Selecciona el espacio físico correspondiente a este servicio.');
+    }
+    const espacio = tieneEspacio ? JSON.parse(espacioValue) : null;
+
     try {
       // 1. Crear el servicio
       const resServicio = await api.post('/servicios', {
@@ -131,7 +162,8 @@ function setupEventListeners() {
         precio_base: data.precio_base,
         nombre_categoria: data.categoria,
         ID_EP: data.ep,
-        nombre_sede: data.sede
+        nombre_sede: data.sede,
+        espacio
       });
       
       const nuevoNumero = resServicio.servicio.numero_servicio;
@@ -152,6 +184,7 @@ function setupEventListeners() {
       alert('Servicio y Pasos creados exitosamente');
       modal.classList.remove('open');
       form.reset();
+      espacioContainer.style.display = 'none';
       loadServicios(); // Recargar catálogo
 
     } catch (err) {

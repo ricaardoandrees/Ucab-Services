@@ -4,10 +4,26 @@ let token = localStorage.getItem('token');
 let userRoles = [];
 let uploadedDocs = []; // Simulación de base64/urls
 
+let formState = {
+  isPuesto: false,
+  isEspacio: false
+};
+let selectedBlocks = [];
+let bookedBlocks = [];
+let detalleActual = null; // raw_fecha de la solicitud abierta en el modal de detalle
+
+function badgeClassFor(estado) {
+  if (estado === 'Completada') return 'success';
+  if (estado === 'En Proceso') return 'warning';
+  return 'primary'; // Cancelada
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthAndRouting();
   setupFileInput();
+  setupDetalleModal();
   loadMyRequests();
+  checkSecretariaPanel();
 });
 
 function checkAuthAndRouting() {
@@ -37,11 +53,11 @@ function checkAuthAndRouting() {
     const puesto = params.get('puesto');
     const est = params.get('est');
     const sede = params.get('sede');
-    
+
     if (puesto) {
       document.getElementById('reserva-section').style.display = 'block';
-      document.getElementById('reserva-desc').textContent = `Puesto asignado: ${puesto} en ${est} (${sede}). Por favor indica la fecha y hora en la que llegarás.`;
-      document.getElementById('req_fecha_llegada').required = true;
+      document.getElementById('reserva-desc').textContent = `Puesto asignado: ${puesto} en ${est} (${sede}). Por favor selecciona la fecha y los bloques.`;
+      document.getElementById('req_fecha').required = true;
     }
 
     api.get('/servicios').then(servicios => {
@@ -64,10 +80,22 @@ function checkAuthAndRouting() {
         document.getElementById('req-service-desc').textContent = s.descripcion;
         document.getElementById('req-service-reqs').textContent = s.requisitos;
 
-        // Mostrar sección de acompañantes si es alquiler/reserva de espacio (NO estacionamiento)
-        const nameLower = s.nombre.toLowerCase();
-        if ((nameLower.includes('alquiler') || nameLower.includes('uso') || nameLower.includes('espacio') || nameLower.includes('reserva')) && !nameLower.includes('estacionamiento')) {
+        // El espacio ya viene fijo desde el catálogo (Servicio.numero_espacio),
+        // el cliente no lo elige: solo selecciona fecha y bloques horarios.
+        if (s.numero_espacio && !puesto) {
           document.getElementById('acompanantes-section').style.display = 'block';
+          document.getElementById('reserva-section').style.display = 'block';
+          document.getElementById('select-espacio-container').style.display = 'block';
+          document.getElementById('req_fecha').required = true;
+
+          document.getElementById('req_espacio').value = JSON.stringify({
+            numero: s.numero_espacio,
+            edificio: s.nombre_edif,
+            direccion: s.direccion_exacta,
+            sede: s.nombre_sede_espacio
+          });
+          document.getElementById('req_espacio_nombre').value = `${s.nombre_edif} — ${s.nombre_sede_espacio}`;
+          document.getElementById('reserva-desc').textContent = `Espacio asignado: ${s.nombre_edif} (${s.nombre_sede_espacio}). Por favor selecciona la fecha y los bloques horarios.`;
         }
       } else {
         document.getElementById('req-service-name').textContent = 'Servicio no encontrado';
@@ -75,6 +103,9 @@ function checkAuthAndRouting() {
       }
     }).catch(err => console.error(err));
   }
+
+  // Listener de bloques horarios: una sola vez, no en cada submit
+  document.getElementById('req_fecha').addEventListener('change', fetchAvailability);
 }
 
 function cancelarSolicitud() {
@@ -130,15 +161,42 @@ function setupFileInput() {
     const params = new URLSearchParams(window.location.search);
     let reservaPayload = null;
     
-    if (params.get('puesto')) {
-      reservaPayload = {
-        fecha_llegada: document.getElementById('req_fecha_llegada').value,
-        puesto: {
-          numero: params.get('puesto'),
-          estacionamiento: params.get('est'),
-          sede: params.get('sede')
+    if (params.get('puesto') || (document.getElementById('req_espacio') && document.getElementById('req_espacio').value)) {
+      if (selectedBlocks.length === 0) {
+        return alert("Debes seleccionar al menos un bloque horario.");
+      }
+      if (selectedBlocks.length > MAX_BLOQUES_HORARIO) {
+        return alert(`Solo puedes seleccionar hasta ${MAX_BLOQUES_HORARIO} bloques horarios.`);
+      }
+
+      const dateVal = document.getElementById('req_fecha').value;
+      const sortedBlocks = selectedBlocks.sort((a,b) => a - b);
+      
+      // Validar contiguos
+      for (let i = 0; i < sortedBlocks.length - 1; i++) {
+        if (sortedBlocks[i+1] !== sortedBlocks[i] + 1) {
+          return alert("Los bloques seleccionados deben ser continuos.");
         }
-      };
+      }
+
+      const start = `${dateVal}T${String(sortedBlocks[0]).padStart(2, '0')}:00`;
+      const end = `${dateVal}T${String(sortedBlocks[sortedBlocks.length - 1] + 1).padStart(2, '0')}:00`;
+
+      if (params.get('puesto')) {
+        reservaPayload = {
+          fecha_llegada: start,
+          fecha_salida: end,
+          puesto: {
+            numero: params.get('puesto'),
+            estacionamiento: params.get('est'),
+            sede: params.get('sede')
+          }
+        };
+      } else {
+        // El espacio ya lo determina el backend a partir del Servicio; aquí
+        // solo se manda el horario pedido.
+        reservaPayload = { fecha_llegada: start, fecha_salida: end };
+      }
     }
 
     // Extraer acompañantes
@@ -262,24 +320,360 @@ async function loadMyRequests() {
               <th>Fecha</th>
               <th>Servicio</th>
               <th>Estado</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody>
     `;
-    
+
     misSolicitudes.forEach(s => {
       const fecha = new Date(s.fecha_hora_creacion).toLocaleString();
-      let badgeClass = s.estado === 'Completada' ? 'success' : (s.estado === 'En Proceso' ? 'warning' : 'primary');
       html += `<tr>
                  <td>${fecha}</td>
                  <td>${s.nombre_servicio}</td>
-                 <td><span class="badge badge--${badgeClass}">${s.estado}</span></td>
+                 <td><span class="badge badge--${badgeClassFor(s.estado)}">${s.estado}</span></td>
+                 <td><button class="btn btn-secondary btn-sm" onclick="abrirDetalle('${s.raw_fecha}')">Ver detalle</button></td>
                </tr>`;
     });
     html += '</tbody></table></div>';
     container.innerHTML = html;
     
   } catch (err) {
-    console.error('Error cargando mis solicitudes', err);
+    alert("Error cargando tus solicitudes: " + err.message);
+  }
+}
+
+// ==========================================
+// PANEL DE SECRETARÍA — TODAS LAS SOLICITUDES
+// ==========================================
+async function checkSecretariaPanel() {
+  if (!token) return;
+  let payload;
+  try {
+    payload = JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return;
+  }
+  // Solo el personal administrativo puede pertenecer a Secretaria; a los
+  // demas roles ni les preguntamos para no gastar una llamada al backend.
+  if (payload.rol !== 'admin' && payload.rol !== 'director') return;
+
+  try {
+    const todas = await api.get('/servicios/solicitudes');
+    document.getElementById('panel-secretaria').style.display = 'block';
+    renderTodasSolicitudes(todas);
+  } catch (err) {
+    // 403: este funcionario no es de Secretaria, el panel se queda oculto
+  }
+}
+
+function renderTodasSolicitudes(rows) {
+  const tbody = document.getElementById('todas-solicitudes-tbody');
+  tbody.innerHTML = '';
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay solicitudes registradas.</td></tr>';
+    return;
+  }
+
+  rows.forEach(s => {
+    const fecha = new Date(s.fecha_hora_creacion).toLocaleString();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fecha}</td>
+      <td>${s.nombre_servicio}</td>
+      <td>${s.ci}</td>
+      <td><span class="badge badge--${badgeClassFor(s.estado)}">${s.estado}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="abrirDetalle('${s.raw_fecha}')">Ver detalle</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==========================================
+// MODAL DE DETALLE DE SOLICITUD (HU-57/60/61/62)
+// ==========================================
+function setupDetalleModal() {
+  document.getElementById('btn-close-detalle').addEventListener('click', cerrarDetalle);
+  document.getElementById('btn-cerrar-detalle').addEventListener('click', cerrarDetalle);
+
+  document.getElementById('det-docs-input').addEventListener('change', async (e) => {
+    const urls = Array.from(e.target.files).map(f => `/uploads/${Date.now()}_${f.name}`);
+    if (urls.length === 0) return;
+    try {
+      await api.post(`/servicios/solicitudes/${encodeURIComponent(detalleActual)}/documentos`, { documentos: urls });
+      abrirDetalle(detalleActual);
+    } catch (err) {
+      alert('No se pudo agregar el documento: ' + err.message);
+    }
+  });
+
+  document.getElementById('btn-add-acomp-detalle').addEventListener('click', async () => {
+    const doc = document.getElementById('det-acomp-doc').value.trim();
+    const nombre = document.getElementById('det-acomp-nombre').value.trim();
+    if (!doc || !nombre) return alert('Completa documento y nombre del acompañante.');
+    try {
+      await api.post(`/servicios/solicitudes/${encodeURIComponent(detalleActual)}/acompanantes`, { documento_identidad: doc, nombre });
+      document.getElementById('det-acomp-doc').value = '';
+      document.getElementById('det-acomp-nombre').value = '';
+      abrirDetalle(detalleActual);
+    } catch (err) {
+      alert('No se pudo agregar el acompañante: ' + err.message);
+    }
+  });
+
+  document.getElementById('btn-reprogramar').addEventListener('click', async () => {
+    const inicio = document.getElementById('det-reprog-inicio').value;
+    const fin = document.getElementById('det-reprog-fin').value;
+    if (!inicio || !fin) return alert('Completa la nueva llegada y salida.');
+    try {
+      await api.patch(`/servicios/solicitudes/${encodeURIComponent(detalleActual)}`, { fecha_llegada: inicio, fecha_salida: fin });
+      alert('Reserva reprogramada.');
+      abrirDetalle(detalleActual);
+    } catch (err) {
+      alert('No se pudo reprogramar: ' + err.message);
+    }
+  });
+
+  document.getElementById('btn-cancelar-solicitud').addEventListener('click', async () => {
+    if (!confirm('¿Cancelar esta solicitud? Esta acción no se puede deshacer.')) return;
+    try {
+      await api.patch(`/servicios/solicitudes/${encodeURIComponent(detalleActual)}/cancelar`);
+      alert('Solicitud cancelada.');
+      cerrarDetalle();
+      loadMyRequests();
+      checkSecretariaPanel();
+    } catch (err) {
+      alert('No se pudo cancelar: ' + err.message);
+    }
+  });
+}
+
+async function abrirDetalle(rawFecha) {
+  detalleActual = rawFecha;
+  try {
+    const data = await api.get(`/servicios/solicitudes/${encodeURIComponent(rawFecha)}`);
+    renderDetalle(data);
+    document.getElementById('modal-detalle-solicitud').classList.add('open');
+  } catch (err) {
+    alert('No se pudo cargar el detalle: ' + err.message);
+  }
+}
+
+function cerrarDetalle() {
+  document.getElementById('modal-detalle-solicitud').classList.remove('open');
+  detalleActual = null;
+}
+
+function renderDetalle(data) {
+  const { solicitud, documentos, acompanantes, reserva, pasos } = data;
+  const editable = solicitud.estado === 'En Proceso';
+
+  document.getElementById('det-servicio-nombre').textContent = `${solicitud.nombre_servicio} (#${solicitud.numero_servicio})`;
+  const estadoBadge = document.getElementById('det-estado');
+  estadoBadge.textContent = solicitud.estado;
+  estadoBadge.className = 'badge badge--' + badgeClassFor(solicitud.estado);
+  document.getElementById('det-fecha').textContent = 'Creada: ' + new Date(solicitud.fecha_hora_creacion).toLocaleString();
+
+  // Reserva
+  const reservaSection = document.getElementById('det-reserva-section');
+  if (reserva) {
+    reservaSection.style.display = 'block';
+    document.getElementById('det-reserva-info').textContent =
+      `${new Date(reserva.fecha_hora).toLocaleString()} — ${new Date(reserva.fecha_hora_fin).toLocaleString()} (${reserva.estado})`;
+    document.getElementById('det-reprogramar-form').style.display = (editable && reserva.estado === 'Pendiente') ? 'flex' : 'none';
+  } else {
+    reservaSection.style.display = 'none';
+  }
+
+  // Documentos
+  const docsList = document.getElementById('det-docs-list');
+  docsList.innerHTML = '';
+  if (documentos.length === 0) {
+    docsList.innerHTML = '<li style="color:var(--text-muted); font-size:13px;">Sin documentos cargados.</li>';
+  }
+  documentos.forEach(d => {
+    const nombreArchivo = d.ruta_archivo.split('/').pop();
+    const li = document.createElement('li');
+    li.style.display = 'flex';
+    li.style.justifyContent = 'space-between';
+    li.innerHTML = `<span>${nombreArchivo}</span>`;
+    if (editable) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '✖';
+      btn.style.background = 'transparent';
+      btn.style.border = 'none';
+      btn.style.color = 'var(--danger)';
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', () => eliminarDocumento(d.id_documento));
+      li.appendChild(btn);
+    }
+    docsList.appendChild(li);
+  });
+  document.getElementById('det-docs-upload-area').style.display = editable ? 'block' : 'none';
+
+  // Acompañantes
+  const acompList = document.getElementById('det-acomp-list');
+  acompList.innerHTML = '';
+  if (acompanantes.length === 0) {
+    acompList.innerHTML = '<li style="color:var(--text-muted); font-size:13px;">Sin acompañantes registrados.</li>';
+  }
+  acompanantes.forEach(a => {
+    const li = document.createElement('li');
+    li.style.display = 'flex';
+    li.style.justifyContent = 'space-between';
+    li.style.padding = '4px 0';
+    li.innerHTML = `<span>${a.nombre} (${a.documento_identidad})</span>`;
+    if (editable) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '✖';
+      btn.style.background = 'transparent';
+      btn.style.border = 'none';
+      btn.style.color = 'var(--danger)';
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', () => eliminarAcompanante(a.documento_identidad));
+      li.appendChild(btn);
+    }
+    acompList.appendChild(li);
+  });
+  document.getElementById('det-acomp-form').style.display = editable ? 'flex' : 'none';
+
+  // Pasos del tramite
+  const pasosList = document.getElementById('det-pasos-list');
+  pasosList.innerHTML = '';
+  if (pasos.length === 0) {
+    pasosList.innerHTML = '<li style="color:var(--text-muted);">Aún no se han generado pasos para esta solicitud.</li>';
+  }
+  pasos.forEach(p => {
+    const li = document.createElement('li');
+    const fin = p.fecha_hora_finalizado ? ` — Finalizado: ${new Date(p.fecha_hora_finalizado).toLocaleString()}` : '';
+    li.textContent = `${p.descripcion} (${p.unidad_responsable}) — ${p.estado}${fin}`;
+    pasosList.appendChild(li);
+  });
+
+  document.getElementById('btn-cancelar-solicitud').style.display = editable ? 'inline-flex' : 'none';
+}
+
+async function eliminarDocumento(id) {
+  if (!confirm('¿Eliminar este documento?')) return;
+  try {
+    await api.delete(`/servicios/solicitudes/${encodeURIComponent(detalleActual)}/documentos/${id}`);
+    abrirDetalle(detalleActual);
+  } catch (err) {
+    alert('No se pudo eliminar el documento: ' + err.message);
+  }
+}
+
+async function eliminarAcompanante(documentoIdentidad) {
+  if (!confirm('¿Quitar a este acompañante?')) return;
+  try {
+    await api.delete(`/servicios/solicitudes/${encodeURIComponent(detalleActual)}/acompanantes/${encodeURIComponent(documentoIdentidad)}`);
+    abrirDetalle(detalleActual);
+  } catch (err) {
+    alert('No se pudo eliminar el acompañante: ' + err.message);
+  }
+}
+
+// ── LÓGICA DE BLOQUES HORARIOS ──
+async function fetchAvailability() {
+  const fecha = document.getElementById('req_fecha').value;
+  const params = new URLSearchParams(window.location.search);
+  const espacioRaw = document.getElementById('req_espacio') ? document.getElementById('req_espacio').value : null;
+
+  if (!fecha) {
+    document.getElementById('time-blocks-container').style.display = 'none';
+    return;
+  }
+
+  // Verificar que al menos tenga el puesto o el espacio seleccionado
+  if (!params.get('puesto') && !espacioRaw) {
+    document.getElementById('time-blocks-container').style.display = 'none';
+    return;
+  }
+
+  let url = `/servicios/reservas/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  if (params.get('puesto')) {
+    url += `&puesto=${encodeURIComponent(params.get('puesto'))}&est=${encodeURIComponent(params.get('est'))}&sede_puesto=${encodeURIComponent(params.get('sede'))}`;
+  } else if (espacioRaw) {
+    const esp = JSON.parse(espacioRaw);
+    url += `&espacio=${encodeURIComponent(esp.numero)}&edif=${encodeURIComponent(esp.edificio)}&sede_espacio=${encodeURIComponent(esp.sede)}`;
+  }
+
+  try {
+    const reservas = await api.get(url);
+    bookedBlocks = [];
+
+    // Parsear bloques ocupados
+    reservas.forEach(r => {
+      const startH = new Date(r.fecha_hora).getHours();
+      const endH = new Date(r.fecha_hora_fin).getHours();
+      for (let h = startH; h < endH; h++) {
+        bookedBlocks.push(h);
+      }
+    });
+
+    selectedBlocks = [];
+    renderTimeBlocks();
+  } catch (err) {
+    console.error("Error obteniendo disponibilidad", err);
+    document.getElementById('time-blocks-container').style.display = 'block';
+    document.getElementById('time-blocks-grid').innerHTML = '';
+    document.getElementById('time-blocks-msg').textContent = 'No se pudo cargar la disponibilidad: ' + err.message;
+  }
+}
+
+const MAX_BLOQUES_HORARIO = 3;
+
+function renderTimeBlocks() {
+  document.getElementById('time-blocks-container').style.display = 'block';
+  const grid = document.getElementById('time-blocks-grid');
+  grid.innerHTML = '';
+
+  for (let i = 8; i < 18; i++) {
+    const isBooked = bookedBlocks.includes(i);
+    const isSelected = selectedBlocks.includes(i);
+    
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = `${i}:00 - ${i+1}:00`;
+    btn.style.padding = '10px';
+    btn.style.border = '1px solid #ccc';
+    btn.style.borderRadius = '4px';
+    btn.style.cursor = isBooked ? 'not-allowed' : 'pointer';
+    btn.style.fontWeight = 'bold';
+    btn.style.fontSize = '12px';
+
+    if (isBooked) {
+      btn.style.background = '#e9ecef';
+      btn.style.color = '#adb5bd';
+    } else if (isSelected) {
+      btn.style.background = 'var(--primary)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--primary)';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = 'var(--text-primary)';
+    }
+
+    if (!isBooked) {
+      btn.addEventListener('click', () => {
+        const msg = document.getElementById('time-blocks-msg');
+        if (selectedBlocks.includes(i)) {
+          selectedBlocks = selectedBlocks.filter(b => b !== i);
+          msg.textContent = '';
+        } else if (selectedBlocks.length >= MAX_BLOQUES_HORARIO) {
+          msg.textContent = `Solo puedes seleccionar hasta ${MAX_BLOQUES_HORARIO} bloques horarios.`;
+          return;
+        } else {
+          selectedBlocks.push(i);
+          msg.textContent = '';
+        }
+        renderTimeBlocks();
+      });
+    }
+
+    grid.appendChild(btn);
   }
 }

@@ -204,6 +204,14 @@ INSERT INTO EspacioFisico (numero, nombre_edif, direccion_exacta, nombre_sede, c
 (1,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana',25,'Disponible'),
 (2,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana',25,'Disponible');
 
+-- Servicio se inserto antes de que existieran los EspacioFisico; se amarra
+-- aqui el espacio fijo de los servicios de tipo alquiler de espacio.
+UPDATE Servicio SET numero_espacio = 1, nombre_edif = 'Edificio de Postgrado', direccion_exacta = 'Av. Teheran, Montalban', nombre_sede_espacio = 'Montalban'
+WHERE nombre = 'Alquiler de Auditorio Hermano Lanz' AND numero_servicio = 1;
+
+UPDATE Servicio SET numero_espacio = 2, nombre_edif = 'Edificio Cincuentenario', direccion_exacta = 'Av. Teheran, Montalban', nombre_sede_espacio = 'Montalban'
+WHERE nombre = 'Uso de Cancha Deportiva' AND numero_servicio = 1;
+
 INSERT INTO Recursos (numero, nombre_espacio_fisico, direccion_exacta, nombre_sede, recurso) VALUES
 (1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban','Proyector'),
 (1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban','Sistema de Sonido'),
@@ -312,10 +320,12 @@ INSERT INTO Factura (numero_de_control, estado, monto_total, fecha_de_emision, f
 (5,'Pagada',11.6,'2026-05-06 09:45:00','2026-05-06 07:45:00','2026-05-06 07:45:00',NULL,'V-20444444'),
 (6,'Pagada',46.4,'2026-05-14 12:00:00','2026-05-07 11:20:00','2026-05-07 11:20:00',NULL,'V-20111111'),
 (7,'Pendiente',46.4,'2026-05-17 16:00:00','2026-05-10 15:30:00','2026-05-10 15:30:00',NULL,'V-20222222'),
-(8,'Pagada',5.8,'2026-05-11 08:10:00','2026-05-11 08:00:00','2026-05-11 08:00:00',NULL,'V-20111111');INSERT INTO Reserva (nombre_servicio, numero_servicio, fecha_hora, fecha_hora_creacion_solicitud, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio, numero_puesto, nombre_estacionamiento, nombre_sede_puesto, estado) VALUES
-('Alquiler de Auditorio Hermano Lanz',1,'2026-05-05 16:00:00','2026-05-05 16:00:00',1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
-('Uso de Cancha Deportiva',1,'2026-05-06 07:45:00','2026-05-06 07:45:00',2,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
-('Reserva de Puesto de Estacionamiento',1,'2026-05-11 08:00:00','2026-05-11 08:00:00',NULL,NULL,NULL,NULL,4,'Estacionamiento Norte','Montalban','Confirmada');
+(8,'Pagada',5.8,'2026-05-11 08:10:00','2026-05-11 08:00:00','2026-05-11 08:00:00',NULL,'V-20111111');
+
+INSERT INTO Reserva (nombre_servicio, numero_servicio, fecha_hora, fecha_hora_fin, fecha_hora_creacion_solicitud, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio, numero_puesto, nombre_estacionamiento, nombre_sede_puesto, estado) VALUES
+('Alquiler de Auditorio Hermano Lanz',1,'2026-05-05 16:00:00','2026-05-05 18:00:00','2026-05-05 16:00:00',1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
+('Uso de Cancha Deportiva',1,'2026-05-06 07:45:00','2026-05-06 09:45:00','2026-05-06 07:45:00',2,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',NULL,NULL,NULL,'Confirmada'),
+('Reserva de Puesto de Estacionamiento',1,'2026-05-11 08:00:00','2026-05-11 08:10:00','2026-05-11 08:00:00',NULL,NULL,NULL,NULL,4,'Estacionamiento Norte','Montalban','Confirmada');
 
 INSERT INTO Tasa (Fecha, Moneda, monto) VALUES
 ('2026-05-10','USD',36.50),

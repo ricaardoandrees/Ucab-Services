@@ -127,6 +127,12 @@ function renderGrid(voluntariados) {
           <button class="btn btn-danger-outline btn-sm"
             onclick="confirmarCerrar('${esc(v.nombre)}')">🔒 Cerrar</button>`;
       }
+      
+      if (v.estado === 'Cerrado') {
+        acciones += `
+          <button class="btn btn-green btn-sm"
+            onclick="confirmarFinalizar('${esc(v.nombre)}')">✅ Finalizar</button>`;
+      }
     } else {
       // Miembro — solo si abierto
       if (v.estado === 'Abierto') {
@@ -264,6 +270,31 @@ function confirmarCerrar(nombre) {
   };
   document.getElementById('btn-confirm-no').onclick = () => cerrarModal('modal-confirm');
 }
+
+// ── HU-XX: Finalizar voluntariado ──────────────────────────
+function confirmarFinalizar(nombre) {
+  document.getElementById('confirm-icon').textContent  = '✅';
+  document.getElementById('confirm-title').textContent = '¿Finalizar voluntariado?';
+  document.getElementById('confirm-msg').textContent   =
+    `El proyecto "${nombre}" pasará a estado Finalizado.`;
+  document.getElementById('btn-confirm-si').textContent = 'Sí, finalizar';
+  document.getElementById('btn-confirm-si').className  = 'btn btn-green';
+
+  abrirModal('modal-confirm');
+
+  document.getElementById('btn-confirm-si').onclick = async () => {
+    cerrarModal('modal-confirm');
+    try {
+      await apiFetch('PATCH', `/voluntariado/${encodeURIComponent(nombre)}/finalizar`);
+      toast(`Voluntariado "${nombre}" finalizado.`, 'success');
+      cargarVoluntariados(estadoActual);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  };
+  document.getElementById('btn-confirm-no').onclick = () => cerrarModal('modal-confirm');
+}
+
 
 // ── HU-104: Inscribirse ──────────────────────────────────
 async function inscribirse(nombre, btn) {

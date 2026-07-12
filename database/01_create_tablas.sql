@@ -250,9 +250,18 @@ CREATE TABLE Servicio (
     ID_EP INT NOT NULL,
     nombre_sede VARCHAR(50) NOT NULL,
 
+    numero_espacio INT,
+    nombre_edif VARCHAR(50),
+    direccion_exacta VARCHAR(70),
+    nombre_sede_espacio VARCHAR(50),
+
     CONSTRAINT PK_SERVICIO PRIMARY KEY (nombre, numero_servicio),
     CONSTRAINT FK_SERVICIO_CATEGORIA FOREIGN KEY (nombre_categoria) REFERENCES CategoriaServicio(Nombre),
-    CONSTRAINT FK_SERVICIO_PRESTADORA FOREIGN KEY (ID_EP) REFERENCES EntidadPrestadora(ID_EP)
+    CONSTRAINT FK_SERVICIO_PRESTADORA FOREIGN KEY (ID_EP) REFERENCES EntidadPrestadora(ID_EP),
+    CONSTRAINT CK_SERVICIO_ESPACIO_COMPLETO CHECK (
+        (numero_espacio IS NULL AND nombre_edif IS NULL AND direccion_exacta IS NULL AND nombre_sede_espacio IS NULL) OR
+        (numero_espacio IS NOT NULL AND nombre_edif IS NOT NULL AND direccion_exacta IS NOT NULL AND nombre_sede_espacio IS NOT NULL)
+    )
 );
 
 CREATE TABLE Suplemento (
@@ -378,6 +387,15 @@ CREATE TABLE EspacioFisico (
     CONSTRAINT FK_ESPACIO_EDIFICACION FOREIGN KEY (nombre_edif, direccion_exacta, nombre_sede) REFERENCES Edificacion(nombre, direccion_exacta, nombre_sede) ON DELETE CASCADE
 );
 
+-- Servicio se crea antes que EspacioFisico en este script; el FK se agrega aqui
+-- porque EspacioFisico ya existe en este punto (referencia hacia adelante).
+-- Un servicio de tipo "alquiler de espacio" queda amarrado a un espacio fisico
+-- fijo desde el catalogo; si se borra el espacio, el servicio no se borra en
+-- cascada, solo pierde la asociacion (ON DELETE SET NULL).
+ALTER TABLE Servicio
+    ADD CONSTRAINT FK_SERVICIO_ESPACIO FOREIGN KEY (numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio)
+    REFERENCES EspacioFisico(numero, nombre_edif, direccion_exacta, nombre_sede) ON DELETE SET NULL;
+
 CREATE TABLE Recursos (
     numero INT NOT NULL,
     nombre_espacio_fisico VARCHAR(50) NOT NULL,
@@ -426,6 +444,7 @@ CREATE TABLE Reserva (
     nombre_servicio VARCHAR(50) NOT NULL,
     numero_servicio INT NOT NULL,
     fecha_hora TIMESTAMP NOT NULL,
+    fecha_hora_fin TIMESTAMP NOT NULL,
     fecha_hora_creacion_solicitud TIMESTAMP NOT NULL,
 
     numero_espacio INT,
@@ -444,6 +463,7 @@ CREATE TABLE Reserva (
     CONSTRAINT FK_RESERVA_SOLICITUD FOREIGN KEY (fecha_hora_creacion_solicitud) REFERENCES Solicitud(fecha_hora_creacion),
     CONSTRAINT FK_RESERVA_ESPACIO FOREIGN KEY (numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio) REFERENCES EspacioFisico(numero, nombre_edif, direccion_exacta, nombre_sede),
     CONSTRAINT FK_RESERVA_PUESTO FOREIGN KEY (numero_puesto, nombre_estacionamiento, nombre_sede_puesto) REFERENCES Puesto_Estacionamiento(numero, nombre_estacionamiento, nombre_sede),
+    CONSTRAINT CK_RESERVA_FECHAS CHECK (fecha_hora_fin > fecha_hora),
     CONSTRAINT CK_RESERVA_XOR CHECK (
         (numero_espacio IS NOT NULL AND numero_puesto IS NULL) OR
         (numero_espacio IS NULL AND numero_puesto IS NOT NULL)

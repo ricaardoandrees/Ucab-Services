@@ -50,9 +50,23 @@
               <h4 style="margin-bottom:10px; color:var(--navy);">Detalles de la Reserva</h4>
               <p id="reserva-desc" style="font-size:13px; margin-bottom:15px; color:var(--text-primary);"></p>
               
-              <div class="field">
-                <label class="field__label">Fecha y Hora de Llegada Esperada</label>
-                <input type="datetime-local" id="req_fecha_llegada" class="field__input">
+              <div id="select-espacio-container" class="field" style="display:none; margin-bottom: 20px;">
+                <label class="field__label">Espacio Físico a Reservar</label>
+                <input type="text" id="req_espacio_nombre" class="field__input" readonly>
+                <input type="hidden" id="req_espacio">
+              </div>
+
+              <div class="field" style="margin-bottom: 20px;">
+                <label class="field__label">Fecha de la Reserva</label>
+                <input type="date" id="req_fecha" class="field__input">
+              </div>
+
+              <div id="time-blocks-container" style="display:none;">
+                <label class="field__label" style="margin-bottom: 10px;">Selecciona los bloques horarios (8 AM - 6 PM)</label>
+                <div id="time-blocks-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+                  <!-- Bloques inyectados por JS -->
+                </div>
+                <p id="time-blocks-msg" style="font-size: 12px; color: var(--danger); margin-top: 10px;"></p>
               </div>
             </div>
 
@@ -120,6 +134,94 @@
       </div>
     </div>
 
+    <!-- Panel de Secretaria (Todas las Solicitudes) -->
+    <div class="card" id="panel-secretaria" style="display:none;">
+      <div class="card__header">
+        <div class="card__header-left">
+          <span class="card__icon">🗂️</span>
+          <span class="card__title">Todas las Solicitudes (Secretaría)</span>
+        </div>
+      </div>
+      <div class="card__body" style="padding:0;">
+        <div class="table-wrap">
+          <table id="tabla-todas-solicitudes" aria-label="Tabla de todas las solicitudes">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Servicio</th>
+                <th>Solicitante (CI)</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="todas-solicitudes-tbody">
+              <!-- Filas renderizadas en JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: Detalle de Solicitud -->
+  <div class="modal-backdrop" id="modal-detalle-solicitud" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">Detalle de Solicitud</span>
+        <button class="modal__close" id="btn-close-detalle" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal__body">
+        <div style="margin-bottom:15px;">
+          <h4 id="det-servicio-nombre" style="color:var(--navy); margin-bottom:5px;"></h4>
+          <span class="badge" id="det-estado"></span>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:5px;" id="det-fecha"></p>
+        </div>
+
+        <div id="det-reserva-section" style="display:none; background:var(--bg-alt); padding:12px; border-radius:8px; margin-bottom:15px;">
+          <h4 style="color:var(--navy); margin-bottom:8px;">Reserva</h4>
+          <p id="det-reserva-info" style="font-size:13px; margin-bottom:10px;"></p>
+          <div id="det-reprogramar-form" style="display:none; gap:10px; align-items:end; flex-wrap:wrap;">
+            <div class="field" style="margin:0;">
+              <label class="field__label">Nueva llegada</label>
+              <input type="datetime-local" id="det-reprog-inicio" class="field__input">
+            </div>
+            <div class="field" style="margin:0;">
+              <label class="field__label">Nueva salida</label>
+              <input type="datetime-local" id="det-reprog-fin" class="field__input">
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-reprogramar">Reprogramar</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:15px;">
+          <h4 style="color:var(--navy); margin-bottom:8px;">Documentos</h4>
+          <ul id="det-docs-list" class="file-list"></ul>
+          <div id="det-docs-upload-area" style="margin-top:8px;">
+            <input type="file" id="det-docs-input" multiple accept=".pdf,.png,.jpg">
+          </div>
+        </div>
+
+        <div style="margin-bottom:15px;">
+          <h4 style="color:var(--navy); margin-bottom:8px;">Acompañantes</h4>
+          <ul id="det-acomp-list" style="list-style:none; padding:0;"></ul>
+          <div id="det-acomp-form" style="display:flex; gap:10px; margin-top:8px;">
+            <input type="text" id="det-acomp-doc" class="field__input" placeholder="Documento ID" style="flex:1">
+            <input type="text" id="det-acomp-nombre" class="field__input" placeholder="Nombre Completo" style="flex:2">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-acomp-detalle">+ Agregar</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:5px;">
+          <h4 style="color:var(--navy); margin-bottom:8px;">Pasos del Trámite</h4>
+          <ol id="det-pasos-list" style="padding-left:20px; font-size:13px;"></ol>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn-secondary" id="btn-cerrar-detalle">Cerrar</button>
+        <button type="button" class="btn" style="background:var(--danger); color:#fff;" id="btn-cancelar-solicitud">Cancelar Solicitud</button>
+      </div>
+    </div>
   </div>
 
   <script src="../js/sidebar.js"></script>

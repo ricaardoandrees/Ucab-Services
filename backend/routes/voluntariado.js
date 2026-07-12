@@ -194,8 +194,40 @@ router.patch('/:nombre/cerrar', auth, autorizar('director', 'admin'), async (req
     res.json({ mensaje: `Voluntariado "${nombre}" cerrado correctamente.` });
 
   } catch (err) {
-    console.error('Error PATCH /voluntariado/:nombre/cerrar:', err);
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    console.error('Error PATCH /voluntariado/cerrar:', err);
+    res.status(500).json({ error: 'Error al cerrar el voluntariado.' });
+  }
+});
+
+/* ----------------------------------------------------------
+   Finalizar Voluntariado (Pasa a estado 'Finalizado')
+   PATCH /api/voluntariado/:nombre/finalizar
+   Requiere: director o admin
+---------------------------------------------------------- */
+router.patch('/:nombre/finalizar', auth, autorizar('director', 'admin'), async (req, res) => {
+  const nombre = decodeURIComponent(req.params.nombre);
+
+  try {
+    const check = await pool.query(
+      `SELECT estado FROM Voluntariado WHERE nombre = $1`, [nombre]
+    );
+
+    if (check.rowCount === 0) {
+      return res.status(404).json({ error: 'Voluntariado no encontrado.' });
+    }
+    if (check.rows[0].estado === 'Finalizado') {
+      return res.status(409).json({ error: 'El voluntariado ya está finalizado.' });
+    }
+
+    await pool.query(
+      `UPDATE Voluntariado SET estado = 'Finalizado' WHERE nombre = $1`, [nombre]
+    );
+
+    res.json({ mensaje: `Voluntariado "${nombre}" finalizado correctamente.` });
+
+  } catch (err) {
+    console.error('Error PATCH /voluntariado/finalizar:', err);
+    res.status(500).json({ error: 'Error al finalizar el voluntariado.' });
   }
 });
 

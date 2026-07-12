@@ -43,8 +43,12 @@ router.post('/', auth, autorizar('admin', 'director'), async (req, res) => {
 
 // ── 3. Crear Puesto ──
 router.post('/puestos', auth, autorizar('admin', 'director'), async (req, res) => {
-  const { numero, nombre_estacionamiento, nombre_sede, tipo_vehiculo } = req.body;
+  const { nombre_estacionamiento, nombre_sede, tipo_vehiculo } = req.body;
   try {
+    const queryNum = `SELECT COALESCE(MAX(numero), 0) + 1 AS next_num FROM Puesto_Estacionamiento WHERE nombre_estacionamiento = $1 AND nombre_sede = $2`;
+    const resNum = await db.query(queryNum, [nombre_estacionamiento, nombre_sede]);
+    const numero = resNum.rows[0].next_num;
+
     const query = `
       INSERT INTO Puesto_Estacionamiento (numero, nombre_estacionamiento, nombre_sede, estado, tipo_vehiculo)
       VALUES ($1, $2, $3, 'Libre', $4) RETURNING *
