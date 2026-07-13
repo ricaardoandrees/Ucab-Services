@@ -281,4 +281,96 @@ router.put('/espacios/:numero/:edif/:sede', auth, autorizar('director', 'admin')
   }
 });
 
+// ─── ENTIDADES EXTERNAS (HU-44, HU-46) ────────────────────
+
+// GET /api/infraestructura/entidades-externas - Solo admin
+router.get('/entidades-externas', auth, autorizar('director', 'admin'), async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT RIF, razon_social, fecha_vencimiento, tipo, ID_EP, correo FROM EntidadExterna ORDER BY razon_social`
+    );
+    res.json({ entidades: rows });
+  } catch (err) {
+    console.error('Error GET /entidades-externas:', err);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// POST /api/infraestructura/entidades-externas (HU-44) - Solo admin
+// Crea la entidad y, si se envia correo+contrasena, la habilita de una vez
+// para que pueda loguearse (publicar servicios y ofertas laborales).
+router.post('/entidades-externas', auth, autorizar('director', 'admin'), async (req, res) => {
+  const { RIF, razon_social, fecha_vencimiento, tipo, correo, contrasena } = req.body;
+  if (!RIF || !razon_social || !fecha_vencimiento || !tipo) {
+    return res.status(400).json({ error: 'Faltan datos obligatorios (RIF, razon_social, fecha_vencimiento, tipo).' });
+  }
+  if ((correo && !contrasena) || (!correo && contrasena)) {
+    return res.status(400).json({ error: 'Correo y contraseña deben enviarse juntos.' });
+  }
+  if (contrasena && contrasena.length < 6) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
+  }
+
+  try {
+    await pool.query('BEGIN');
+
+    const idRes = await pool.query('SELECT COALESCE(MAX(ID_EP), 0) + 1 AS next_id FROM EntidadPrestadora');
+    const ID_EP = idRes.rows[0].next_id;
+    await pool.query('INSERT INTO EntidadPrestadora (ID_EP) VALUES ($1)', [ID_EP]);
+
+    await pool.query(
+      'INSERT INTO EntidadExterna (RIF, razon_social, fecha_vencimiento, tipo, ID_EP, correo) VALUES ($1, $2, $3, $4, $5, $6)',
+      [RIF, razon_social, fecha_vencimiento, tipo, ID_EP, correo || null]
+    );
+
+    if (correo && contrasena) {
+      const safeRIF = RIF.replace(/"/g, '');
+      const safePassword = contrasena.replace(/'/g, "''");
+      await pool.query(`CREATE USER "${safeRIF}" WITH PASSWORD '${safePassword}'`);
+      await pool.query(`GRANT rol_aliado_externo TO "${safeRIF}"`);
+    }
+
+    await pool.query('COMMIT');
+    res.status(201).json({ message: 'Entidad externa registrada exitosamente.', ID_EP });
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    if (err.code === '23505') return res.status(409).json({ error: 'Ya existe una entidad con ese RIF o correo.' });
+    console.error('Error POST /entidades-externas:', err);
+    res.status(500).json({ error: err.detail || 'Error interno del servidor.' });
+  }
+});
+
+// PATCH /api/infraestructura/entidades-externas/:rif/credenciales - Solo admin
+// Asigna o resetea el correo/contraseña de una entidad ya existente
+// (por ejemplo, las que vinieron cargadas por seed sin cuenta habilitada).
+router.patch('/entidades-externas/:rif/credenciales', auth, autorizar('director', 'admin'), async (req, res) => {
+  const { rif } = req.params;
+  const { correo, contrasena } = req.body;
+  if (!correo || !contrasena) return res.status(400).json({ error: 'Correo y contraseña son obligatorios.' });
+  if (contrasena.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
+
+  try {
+    const check = await pool.query('SELECT RIF FROM EntidadExterna WHERE RIF = $1', [rif]);
+    if (check.rowCount === 0) return res.status(404).json({ error: 'Entidad externa no encontrada.' });
+
+    await pool.query('UPDATE EntidadExterna SET correo = $1 WHERE RIF = $2', [correo, rif]);
+
+    const safeRIF = rif.replace(/"/g, '');
+    const safePassword = contrasena.replace(/'/g, "''");
+    const roleExists = await pool.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [rif]);
+    if (roleExists.rowCount > 0) {
+      await pool.query(`ALTER USER "${safeRIF}" WITH PASSWORD '${safePassword}'`);
+    } else {
+      await pool.query(`CREATE USER "${safeRIF}" WITH PASSWORD '${safePassword}'`);
+      await pool.query(`GRANT rol_aliado_externo TO "${safeRIF}"`);
+    }
+
+    res.json({ message: 'Credenciales actualizadas correctamente.' });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Ese correo ya está en uso por otra entidad.' });
+    console.error('Error PATCH /entidades-externas/:rif/credenciales:', err);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
 module.exports = router;

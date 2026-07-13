@@ -49,7 +49,7 @@ router.post('/login', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+      return loginEntidadExterna(req, res, correo, contrasena);
     }
 
     const miembro = result.rows[0];
@@ -135,6 +135,64 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
+
+/*
+   Login de Entidad Externa (aliado comercial / concesionario).
+   Se llama cuando el correo no matchea ningun Miembro. A diferencia del
+   login de Miembro, no lleva Sesion/bloqueo por intentos fallidos: esa
+   auditoria esta atada por FK a Miembro(CI) y una entidad externa no es
+   un Miembro.
+*/
+async function loginEntidadExterna(req, res, correo, contrasena) {
+  try {
+    const result = await pool.query(
+      `SELECT RIF, razon_social, tipo, correo FROM EntidadExterna WHERE correo = $1`,
+      [correo]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    }
+
+    const entidad = result.rows[0];
+
+    const clientDCL = new Client({
+      host:     process.env.DB_HOST,
+      port:     process.env.DB_PORT,
+      database: process.env.DB_NAME,
+      user:     entidad.rif,
+      password: contrasena
+    });
+
+    try {
+      await clientDCL.connect();
+      await clientDCL.end();
+    } catch {
+      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    }
+
+    const token = jwt.sign(
+      { RIF: entidad.rif, rol: 'aliado_externo', tipo: 'entidad_externa', razon_social: entidad.razon_social },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.json({
+      token,
+      usuario: {
+        RIF:          entidad.rif,
+        nombre:       entidad.razon_social,
+        correo:       entidad.correo,
+        rol:          'aliado_externo',
+        tipo:         'entidad_externa',
+        tipo_entidad: entidad.tipo
+      }
+    });
+  } catch (err) {
+    console.error('Error en login de entidad externa:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+}
 
 router.post('/register', async (req, res) => {
   const {

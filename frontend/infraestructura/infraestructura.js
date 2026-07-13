@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetId === 'tab-espacios') loadEspacios();
       if (targetId === 'tab-edificaciones') loadEdificaciones();
       if (targetId === 'tab-sedes') loadSedes();
+      if (targetId === 'tab-aliados') loadAliados();
     });
   });
 
@@ -49,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isPrivileged) {
     document.getElementById('btn-tab-sedes').style.display = 'inline-block';
     document.getElementById('btn-add-sede').style.display = 'inline-flex';
+    document.getElementById('btn-tab-aliados').style.display = 'inline-block';
+  } else {
+    document.getElementById('btn-add-aliado').style.display = 'none';
   }
   if (isPrivileged) {
     document.getElementById('btn-add-edificacion').style.display = 'inline-flex';
@@ -59,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-add-sede')?.addEventListener('click', openModalSedeCrear);
   document.getElementById('btn-add-edificacion')?.addEventListener('click', openModalEdifCrear);
   document.getElementById('btn-add-espacio')?.addEventListener('click', openModalEspacioCrear);
-  document.getElementById('btn-add-aliado')?.addEventListener('click', openModalAliado);
+  document.getElementById('btn-add-aliado')?.addEventListener('click', openModalAliadoCrear);
 
   // Cargar tab inicial
   loadEspacios();
@@ -163,6 +167,115 @@ async function loadSedes() {
     `).join('');
   } catch (err) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="3">❌ ${err.message}</td></tr>`;
+  }
+}
+
+// ── 5. ALIADOS / ENTIDADES EXTERNAS (HU-44, HU-46) ─────────
+async function loadAliados() {
+  if (!isPrivileged) return;
+  const tbody = document.getElementById('tbody-aliados');
+  tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Cargando...</td></tr>`;
+  try {
+    const data = await apiFetch('GET', '/entidades-externas');
+    if (data.entidades.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No hay aliados registrados.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.entidades.map(a => `
+      <tr>
+        <td><b>${esc(a.rif)}</b></td>
+        <td>${esc(a.razon_social)}</td>
+        <td class="td-muted">${new Date(a.fecha_vencimiento).toLocaleDateString()}</td>
+        <td>${esc(a.tipo)}</td>
+        <td>
+          ${a.correo
+            ? `<span class="badge badge--green">${esc(a.correo)}</span>`
+            : `<span class="badge badge--red">Sin acceso</span>`}
+        </td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick='openModalAliadoCredenciales(${JSON.stringify(a).replace(/'/g, "&apos;")})'>
+            🔑 ${a.correo ? 'Resetear acceso' : 'Habilitar acceso'}
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">❌ ${err.message}</td></tr>`;
+  }
+}
+
+let modoAliadoForm = 'crear';
+let editAliadoRif = null;
+
+function openModalAliadoCrear() {
+  modoAliadoForm = 'crear';
+  editAliadoRif = null;
+  document.getElementById('title-aliado').textContent = 'Añadir Aliado Externo';
+  document.getElementById('form-aliado').reset();
+  document.getElementById('inp-aliado-rif').disabled = false;
+  document.getElementById('inp-aliado-razon').disabled = false;
+  document.getElementById('inp-aliado-vencimiento').disabled = false;
+  document.getElementById('inp-aliado-tipo').disabled = false;
+  document.getElementById('aliado-credenciales-hint').textContent =
+    'Correo y contraseña para que el aliado pueda entrar a publicar servicios y ofertas laborales (opcional, se puede habilitar después).';
+  showAlert('alert-aliado', '');
+  abrirModal('modal-aliado');
+}
+
+function openModalAliadoCredenciales(a) {
+  modoAliadoForm = 'credenciales';
+  editAliadoRif = a.rif;
+  document.getElementById('title-aliado').textContent = `Credenciales de acceso — ${a.razon_social}`;
+  document.getElementById('form-aliado').reset();
+
+  document.getElementById('inp-aliado-rif').value = a.rif;
+  document.getElementById('inp-aliado-rif').disabled = true;
+  document.getElementById('inp-aliado-razon').value = a.razon_social;
+  document.getElementById('inp-aliado-razon').disabled = true;
+  document.getElementById('inp-aliado-vencimiento').value = a.fecha_vencimiento.substring(0, 10);
+  document.getElementById('inp-aliado-vencimiento').disabled = true;
+  document.getElementById('inp-aliado-tipo').value = a.tipo;
+  document.getElementById('inp-aliado-tipo').disabled = true;
+
+  document.getElementById('inp-aliado-correo').value = a.correo || '';
+  document.getElementById('aliado-credenciales-hint').textContent =
+    a.correo
+      ? 'Esta entidad ya tiene acceso. Completa correo y una contraseña nueva para resetearlo.'
+      : 'Esta entidad todavía no puede entrar a la plataforma. Asígnale correo y contraseña para habilitarla.';
+
+  showAlert('alert-aliado', '');
+  abrirModal('modal-aliado');
+}
+
+async function submitAliado(e) {
+  e.preventDefault();
+  const correo = document.getElementById('inp-aliado-correo').value.trim();
+  const contrasena = document.getElementById('inp-aliado-password').value;
+
+  try {
+    if (modoAliadoForm === 'crear') {
+      const RIF = document.getElementById('inp-aliado-rif').value.trim();
+      const razon_social = document.getElementById('inp-aliado-razon').value.trim();
+      const fecha_vencimiento = document.getElementById('inp-aliado-vencimiento').value;
+      const tipo = document.getElementById('inp-aliado-tipo').value;
+
+      await apiFetch('POST', '/entidades-externas', {
+        RIF, razon_social, fecha_vencimiento, tipo,
+        correo: correo || null,
+        contrasena: contrasena || null
+      });
+      toast('Aliado externo registrado.');
+    } else {
+      if (!correo || !contrasena) {
+        return showAlert('alert-aliado', 'Correo y contraseña son obligatorios para habilitar el acceso.');
+      }
+      await apiFetch('PATCH', `/entidades-externas/${encodeURIComponent(editAliadoRif)}/credenciales`, { correo, contrasena });
+      toast('Credenciales actualizadas.');
+    }
+    cerrarModal('modal-aliado');
+    loadAliados();
+  } catch (err) {
+    showAlert('alert-aliado', err.message);
   }
 }
 

@@ -89,15 +89,16 @@
     <div id="tab-aliados" class="tab-panel">
       <div class="table-container">
         <div class="table-header">
-          <!-- Aliados fue movido a su propia página -->
+          <span class="table-title">Aliados / Entidades Externas</span>
+          <button class="btn btn-amber" id="btn-add-aliado">+ Añadir Aliado</button>
         </div>
         <div class="table-wrap">
-          <table style="display: none;" id="table-aliados">
+          <table id="table-aliados">
             <thead>
-              <tr><th>RIF</th><th>Razón Social</th><th>Vencimiento</th><th>Tipo</th><th>Contactos</th></tr>
+              <tr><th>RIF</th><th>Razón Social</th><th>Vencimiento</th><th>Tipo</th><th>Acceso</th><th>Acciones</th></tr>
             </thead>
             <tbody id="tbody-aliados">
-              <tr class="empty-row"><td colspan="5">Cargando...</td></tr>
+              <tr class="empty-row"><td colspan="6">Cargando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -246,6 +247,62 @@
   </div>
 
 
+
+  <!-- Modal Aliado / Entidad Externa -->
+  <div class="modal-backdrop" id="modal-aliado">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="title-aliado">Aliado Externo</span>
+        <button class="modal__close" onclick="cerrarModal('modal-aliado')">✕</button>
+      </div>
+      <form id="form-aliado" onsubmit="submitAliado(event)">
+        <div class="modal__body">
+          <div id="alert-aliado" class="alert alert--error"></div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">RIF</label>
+              <input class="field__input" id="inp-aliado-rif" type="text" maxlength="20" required />
+            </div>
+            <div class="field">
+              <label class="field__label">Tipo</label>
+              <select class="field__select" id="inp-aliado-tipo" required>
+                <option value="Concesionario">Concesionario</option>
+                <option value="Aliado Comercial">Aliado Comercial</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label">Razón Social</label>
+            <input class="field__input" id="inp-aliado-razon" type="text" maxlength="20" required />
+          </div>
+          <div class="field">
+            <label class="field__label">Fecha de Vencimiento del Contrato</label>
+            <input class="field__input" id="inp-aliado-vencimiento" type="date" required />
+          </div>
+
+          <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);" />
+          <p id="aliado-credenciales-hint" style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+            Correo y contraseña para que el aliado pueda entrar a publicar servicios y ofertas laborales (opcional, se puede habilitar después).
+          </p>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Correo de acceso</label>
+              <input class="field__input" id="inp-aliado-correo" type="email" maxlength="50" />
+            </div>
+            <div class="field">
+              <label class="field__label">Contraseña</label>
+              <input class="field__input" id="inp-aliado-password" type="password" minlength="6" autocomplete="new-password" />
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn-outline" onclick="cerrarModal('modal-aliado')">Cancelar</button>
+          <button type="submit" class="btn btn-amber">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ── TOASTS ─────────────────────────────────────────── -->
   <div class="toast-wrap" id="toast-wrap"></div>

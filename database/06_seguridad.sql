@@ -1,7 +1,8 @@
-/* 
+/*
    Roles definidos:
      rol_consulta       → Público externo (solo lectura)
-     rol_operador       → Miembros, Egresados, Profesores, Entidades externas
+     rol_operador       → Miembros, Egresados, Profesores
+     rol_aliado_externo → Entidades externas (concesionarios, aliados comerciales)
      rol_rrhh           → Administradores de RRHH y Miembros
      rol_finanzas       → Administradores Financieros
      rol_infraestructura→ Administradores de Sedes y Catálogo
@@ -15,6 +16,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'rol_operador') THEN
         CREATE ROLE rol_operador;
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'rol_aliado_externo') THEN
+        CREATE ROLE rol_aliado_externo;
     END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'rol_rrhh') THEN
         CREATE ROLE rol_rrhh;
@@ -39,10 +43,9 @@ GRANT SELECT ON
     EntidadInterna, Historial_Tarifas
 TO rol_consulta;
 
-/* 
+/*
   rol_operador — Operaciones transaccionales
-   Actores: Miembro, Egresado, Becario, Preparador, Estudiante,
-            Profesor, Aliado externo / Entidad externa
+   Actores: Miembro, Egresado, Becario, Preparador, Estudiante, Profesor
 */
 GRANT rol_consulta TO rol_operador;
 
@@ -109,6 +112,19 @@ TO rol_operador;
 GRANT EXECUTE ON PROCEDURE
     crear_solicitud(VARCHAR, VARCHAR, INT, VARCHAR, VARCHAR)
 TO rol_operador;
+
+/*
+  rol_aliado_externo — Bolsa de trabajo desde el lado del aliado
+   Actores: Entidad Externa (concesionario, aliado comercial)
+   El filtro de "solo mis propias ofertas/postulaciones" (por RIF)
+   lo aplica el backend, no la seguridad a nivel de fila.
+*/
+GRANT rol_consulta TO rol_aliado_externo;
+GRANT SELECT, INSERT, UPDATE ON OfertaLaboral TO rol_aliado_externo;
+GRANT SELECT ON Postula TO rol_aliado_externo;
+GRANT SELECT, UPDATE ON EntidadExterna TO rol_aliado_externo;
+GRANT SELECT, INSERT ON Contactos TO rol_aliado_externo;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO rol_aliado_externo;
 
 /* ==========================================================
    ROLES ADMINISTRATIVOS (Heredan de rol_operador)
