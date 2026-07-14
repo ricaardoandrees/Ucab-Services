@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Bolsa de Trabajo</title>
+  <link rel="stylesheet" href="bolsatrabajo.css" />
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/api.js"></script>
+</head>
+<body>
+
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">💼 Bolsa de Trabajo</h1>
+        <p class="page-header__sub" id="page-sub">Oportunidades laborales publicadas por aliados externos de la UCAB.</p>
+      </div>
+      <button class="btn btn-amber" id="btn-publicar" style="display:none">+ Publicar Vacante</button>
+    </div>
+
+    <!-- Sugeridas (solo egresados) -->
+    <div class="sugeridas-section" id="sugeridas-section" style="display:none">
+      <h3>✨ Vacantes sugeridas para ti</h3>
+      <div class="cards-grid" id="sugeridas-grid"></div>
+    </div>
+
+    <!-- Catálogo / Mis ofertas -->
+    <h3 id="titulo-catalogo" style="font-size:15px; color:var(--navy); margin-bottom:12px;">Vacantes Disponibles</h3>
+    <div class="cards-grid" id="ofertas-grid">
+      <div class="empty-state">
+        <div class="empty-state__icon">⏳</div>
+        <p class="empty-state__msg">Cargando...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Publicar / Editar vacante ───────────────── -->
+  <div class="modal-backdrop" id="modal-form" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-form-title">Publicar Vacante</span>
+        <button class="modal__close" onclick="cerrarModal('modal-form')" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="form-oferta">
+        <div class="modal__body">
+          <div id="alert-form" class="alert alert--error"></div>
+
+          <div class="field">
+            <label class="field__label" for="inp-cargo">Cargo *</label>
+            <input class="field__input" id="inp-cargo" type="text" maxlength="20" required />
+          </div>
+          <div class="field">
+            <label class="field__label" for="inp-perfil">Perfil buscado *</label>
+            <textarea class="field__textarea" id="inp-perfil" maxlength="150" required
+                      placeholder="Ej. Ingeniero recién graduado con promedio superior a 15..."></textarea>
+          </div>
+          <div class="field">
+            <label class="field__label" for="inp-resp">Responsabilidades *</label>
+            <textarea class="field__textarea" id="inp-resp" maxlength="150" required></textarea>
+          </div>
+          <div class="field">
+            <label class="field__label" for="inp-beneficios">Beneficios *</label>
+            <textarea class="field__textarea" id="inp-beneficios" maxlength="150" required></textarea>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn-secondary" onclick="cerrarModal('modal-form')">Cancelar</button>
+          <button type="submit" class="btn btn-amber" id="btn-form-submit">Publicar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Postulantes ─────────────────────────────── -->
+  <div class="modal-backdrop" id="modal-postulantes" role="dialog" aria-modal="true">
+    <div class="modal modal--lg">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-post-title">Postulantes</span>
+        <button class="modal__close" onclick="cerrarModal('modal-postulantes')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal__body" style="padding:0">
+        <div class="table-wrap">
+          <table aria-label="Postulantes de la vacante">
+            <thead>
+              <tr>
+                <th>CI</th><th>Nombre</th><th>Correo</th><th>Título</th><th>Índice</th><th>Año Grad.</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-postulantes">
+              <tr class="empty-row"><td colspan="6">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-secondary" onclick="cerrarModal('modal-postulantes')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Confirmar acción ───────────────────────── -->
+  <div class="modal-backdrop" id="modal-confirm" role="alertdialog" aria-modal="true">
+    <div class="confirm-box">
+      <div class="confirm-box__icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-box__title" id="confirm-title">¿Estás seguro?</div>
+      <div class="confirm-box__msg" id="confirm-msg">Esta acción no se puede deshacer.</div>
+      <div class="confirm-box__actions">
+        <button class="btn-secondary" id="btn-confirm-no">Cancelar</button>
+        <button class="btn btn-danger" id="btn-confirm-si">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOASTS ─────────────────────────────────────────── -->
+  <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="bolsatrabajo.js"></script>
+</body>
+</html>
