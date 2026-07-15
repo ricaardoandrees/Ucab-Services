@@ -4,11 +4,13 @@
 let servicios = [];
 let userRoles = [];
 let token = localStorage.getItem('token'); // Simulando que el JWT se guarda en localStorage
+let esAdmin = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthAndRoles();
   loadServicios();
   setupEventListeners();
+  setupSuplementos();
 });
 
 function checkAuthAndRoles() {
@@ -16,6 +18,7 @@ function checkAuthAndRoles() {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     if (payload.rol === 'admin' || payload.rol === 'director') {
+      esAdmin = true;
       const btn = document.getElementById('btn-nuevo-servicio');
       if (btn) btn.style.display = 'inline-flex';
     }
@@ -59,6 +62,7 @@ function renderServicios(data) {
         <div style="margin-top:4px">📝 Req: <strong>${s.requisitos || 'Ninguno'}</strong></div>
       </div>
       <button class="btn btn-primary w-full" onclick="solicitarServicio('${s.nombre}', ${s.numero_servicio})">Solicitar Trámite</button>
+      ${esAdmin ? `<button class="btn btn-secondary w-full" style="margin-top:6px;" onclick="abrirModalSuplementos('${s.nombre.replace(/'/g, "\\'")}', ${s.numero_servicio})">🎁 Suplementos</button>` : ''}
     `;
     grid.appendChild(card);
   });
@@ -204,4 +208,95 @@ function filterServices() {
   });
 
   renderServicios(filtered);
+}
+
+// ==========================================
+// SUPLEMENTOS (HU-63 a HU-66)
+// ==========================================
+let suplementoServicioActual = null; // { nombre, numero }
+
+function setupSuplementos() {
+  document.getElementById('btn-close-suplementos').addEventListener('click', cerrarModalSuplementos);
+  document.getElementById('btn-cerrar-suplementos').addEventListener('click', cerrarModalSuplementos);
+  document.getElementById('form-suplemento-nuevo').addEventListener('submit', submitSuplementoNuevo);
+}
+
+function cerrarModalSuplementos() {
+  document.getElementById('modal-suplementos').classList.remove('open');
+}
+
+async function abrirModalSuplementos(nombre, numero) {
+  suplementoServicioActual = { nombre, numero };
+  document.getElementById('sup-servicio-nombre').textContent = nombre;
+  document.getElementById('form-suplemento-nuevo').reset();
+  await loadSuplementosList();
+  document.getElementById('modal-suplementos').classList.add('open');
+}
+
+async function loadSuplementosList() {
+  const ul = document.getElementById('list-suplementos');
+  ul.innerHTML = '<li>Cargando...</li>';
+  const { nombre, numero } = suplementoServicioActual;
+
+  try {
+    const suplementos = await api.get(`/servicios/${encodeURIComponent(nombre)}/${numero}/suplementos`);
+    if (suplementos.length === 0) {
+      ul.innerHTML = '<li style="color: var(--text-muted, #666);">Este servicio no tiene suplementos registrados.</li>';
+      return;
+    }
+    ul.innerHTML = suplementos.map(s => `
+      <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;">
+        <span>${s.concepto} — <strong>$${Number(s.precio_unitario).toFixed(2)}</strong></span>
+        <span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="editarSuplemento('${s.concepto.replace(/'/g, "\\'")}', ${s.precio_unitario})">✏️</button>
+          <button type="button" class="btn btn-secondary btn-sm" style="color:var(--danger)" onclick="eliminarSuplemento('${s.concepto.replace(/'/g, "\\'")}')">✖</button>
+        </span>
+      </li>
+    `).join('');
+  } catch (err) {
+    ul.innerHTML = `<li style="color: red;">Error: ${err.message}</li>`;
+  }
+}
+
+async function submitSuplementoNuevo(e) {
+  e.preventDefault();
+  const concepto = document.getElementById('sup_concepto').value.trim();
+  const precio_unitario = parseFloat(document.getElementById('sup_precio').value);
+  const { nombre, numero } = suplementoServicioActual;
+
+  try {
+    await api.post(`/servicios/${encodeURIComponent(nombre)}/${numero}/suplementos`, { concepto, precio_unitario });
+    document.getElementById('form-suplemento-nuevo').reset();
+    loadSuplementosList();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function editarSuplemento(concepto, precioActual) {
+  const nuevoPrecio = prompt(`Nuevo precio unitario para "${concepto}":`, precioActual);
+  if (nuevoPrecio === null) return;
+  const precio_unitario = parseFloat(nuevoPrecio);
+  if (isNaN(precio_unitario) || precio_unitario <= 0) {
+    return alert('El precio debe ser un número mayor a cero.');
+  }
+
+  const { nombre, numero } = suplementoServicioActual;
+  try {
+    await api.put(`/servicios/${encodeURIComponent(nombre)}/${numero}/suplementos/${encodeURIComponent(concepto)}`, { precio_unitario });
+    loadSuplementosList();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function eliminarSuplemento(concepto) {
+  if (!confirm(`¿Eliminar el suplemento "${concepto}"?`)) return;
+  const { nombre, numero } = suplementoServicioActual;
+  try {
+    await api.delete(`/servicios/${encodeURIComponent(nombre)}/${numero}/suplementos/${encodeURIComponent(concepto)}`);
+    loadSuplementosList();
+  } catch (err) {
+    alert(err.message);
+  }
 }

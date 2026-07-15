@@ -288,17 +288,20 @@ INSERT INTO Acompanante (documento_identidad, nombre, fecha_hora_creacion) VALUE
 ('V-40111111','Gabriel Suarez','2026-05-05 16:00:00'),
 ('V-40222222','Daniela Briceno','2026-05-05 16:00:00');
 
-INSERT INTO Folio_Consumo (fecha_hora_apertura, fecha_hora_creacion_solicitud, estado) VALUES
-('2026-05-01 09:00:00','2026-05-01 09:00:00','Cerrado'),
-('2026-05-02 10:15:00','2026-05-02 10:15:00','Cerrado'),
-('2026-05-03 14:00:00','2026-05-03 14:00:00','Cerrado'),
-('2026-05-04 08:30:00','2026-05-04 08:30:00','Abierto'),
-('2026-05-05 16:00:00','2026-05-05 16:00:00','Cerrado'),
-('2026-05-06 07:45:00','2026-05-06 07:45:00','Cerrado'),
-('2026-05-07 11:20:00','2026-05-07 11:20:00','Cerrado'),
-('2026-05-09 09:50:00','2026-05-09 09:50:00','Abierto'),
-('2026-05-10 15:30:00','2026-05-10 15:30:00','Cerrado'),
-('2026-05-11 08:00:00','2026-05-11 08:00:00','Cerrado');
+-- Folio_Consumo ya NO se inserta a mano: trg_abrir_folio_solicitud lo abre
+-- solo ('Abierto') al insertar cada Solicitud de arriba. Aqui solo se
+-- actualizan a 'Cerrado' los que en esta narrativa ya se facturaron.
+UPDATE Folio_Consumo SET estado = 'Cerrado'
+WHERE fecha_hora_creacion_solicitud IN (
+    '2026-05-01 09:00:00',
+    '2026-05-02 10:15:00',
+    '2026-05-03 14:00:00',
+    '2026-05-05 16:00:00',
+    '2026-05-06 07:45:00',
+    '2026-05-07 11:20:00',
+    '2026-05-10 15:30:00',
+    '2026-05-11 08:00:00'
+);
 
 INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud, fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante, cantidad, precio_unitario, impuestos) VALUES
 ('Consulta Medica General','2026-05-01 09:01:00','2026-05-01 09:00:00','2026-05-01 09:00:00','2026-01-01 00:00:00','Consulta Medica General',1,'Miembro Activo',1,25.0,4.0),

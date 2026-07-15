@@ -153,6 +153,35 @@
     </div>
   </div>
 
+  <!-- MODAL: Suplementos de un Servicio -->
+  <div class="modal-backdrop" id="modal-suplementos" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">Suplementos — <span id="sup-servicio-nombre"></span></span>
+        <button class="modal__close" id="btn-close-suplementos" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal__body">
+        <ul id="list-suplementos" style="list-style: none; padding: 0; margin-bottom: 1rem;">
+          <!-- Filas inyectadas por JS -->
+        </ul>
+        <form id="form-suplemento-nuevo" style="display:flex; gap:10px; align-items:flex-end;">
+          <div class="field" style="flex:2; margin:0;">
+            <label class="field__label">Concepto</label>
+            <input type="text" class="field__input" id="sup_concepto" maxlength="20" required placeholder="Ej. Equipo de Sonido" />
+          </div>
+          <div class="field" style="flex:1; margin:0;">
+            <label class="field__label">Precio Unitario ($)</label>
+            <input type="number" class="field__input" id="sup_precio" step="0.01" min="0.01" required />
+          </div>
+          <button type="submit" class="btn btn-amber">+ Agregar</button>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn-secondary" id="btn-cerrar-suplementos">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../js/sidebar.js"></script>
   <script src="servicios.js"></script>
 </body>

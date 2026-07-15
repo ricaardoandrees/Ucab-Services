@@ -276,7 +276,10 @@ function renderInbox(pasos) {
       <td>${p.solicitante}</td>
       <td><strong>Paso ${p.numero_paso}:</strong> ${p.descripcion}</td>
       <td>
-        <button class="btn btn-primary btn-sm" 
+        <button class="btn btn-secondary btn-sm" onclick="abrirDetalle('${p.raw_fecha}')">
+          Ver Solicitud
+        </button>
+        <button class="btn btn-primary btn-sm"
                 onclick="completarPaso(${p.numero_paso}, '${p.raw_fecha}')">
           Completar
         </button>
@@ -467,13 +470,18 @@ function cerrarDetalle() {
 
 function renderDetalle(data) {
   const { solicitud, documentos, acompanantes, reserva, pasos } = data;
-  const editable = solicitud.estado === 'En Proceso';
+  // El backend ya decide si este usuario puede editar (dueño o Secretaria);
+  // aparte de eso, igual solo tiene sentido mientras siga En Proceso.
+  const editable = data.puedeEditar && solicitud.estado === 'En Proceso';
 
   document.getElementById('det-servicio-nombre').textContent = `${solicitud.nombre_servicio} (#${solicitud.numero_servicio})`;
   const estadoBadge = document.getElementById('det-estado');
   estadoBadge.textContent = solicitud.estado;
   estadoBadge.className = 'badge badge--' + badgeClassFor(solicitud.estado);
   document.getElementById('det-fecha').textContent = 'Creada: ' + new Date(solicitud.fecha_hora_creacion).toLocaleString();
+  if (solicitud.tiempo_resolucion_dias != null) {
+    document.getElementById('det-fecha').textContent += ` · Resuelta en ${solicitud.tiempo_resolucion_dias} día(s) hábil(es)`;
+  }
 
   // Reserva
   const reservaSection = document.getElementById('det-reserva-section');

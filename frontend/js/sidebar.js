@@ -43,7 +43,7 @@
     { label: 'Infraestructura',  icon: 'building',  path: '../infraestructura/infraestructura.html', roles: ['admin','director'] },
     { label: 'Servicios',        icon: 'briefcase', path: '../servicios/servicios.html',             roles: [] },
     { label: 'Solicitudes',      icon: 'file',      path: '../solicitudes/solicitudes.html',         roles: [] },
-    { label: 'Financiero',       icon: 'dollar',    path: '../financiero/financiero.html',           roles: ['admin','director','cajero'] },
+    { label: 'Financiero',       icon: 'dollar',    path: '../financiero/financiero.html',           roles: [] },
     { label: 'Bolsa de Trabajo', icon: 'search',    path: '../bolsatrabajo/bolsatrabajo.html',       roles: [] },
     { label: 'Vehículos',        icon: 'car',       path: '../vehiculos/vehiculos.html',             roles: [] },
     { label: 'Estacionamiento',  icon: 'parking',   path: '../estacionamiento/estacionamiento.html', roles: [] },

@@ -832,3 +832,22 @@ CREATE OR REPLACE TRIGGER trg_validar_bloque_horario
 BEFORE INSERT OR UPDATE ON Reserva
 FOR EACH ROW
 EXECUTE FUNCTION fn_validar_bloque_horario();
+
+-- ------------------------------------------------------------
+-- HU-72: al crear una Solicitud, se abre automaticamente su
+-- Folio_Consumo ("estado de cuenta vinculado a su solicitud"),
+-- igual que fn_generar_pasos_solicitud abre los pasos.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_abrir_folio_solicitud()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Folio_Consumo (fecha_hora_apertura, fecha_hora_creacion_solicitud, estado)
+    VALUES (NEW.fecha_hora_creacion, NEW.fecha_hora_creacion, 'Abierto');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_abrir_folio_solicitud
+AFTER INSERT ON Solicitud
+FOR EACH ROW
+EXECUTE FUNCTION fn_abrir_folio_solicitud();

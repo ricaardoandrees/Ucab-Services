@@ -105,6 +105,94 @@ router.post('/:nombre/:numero/plantillas', auth, autorizar('admin', 'director'),
 });
 
 /* ----------------------------------------------------------
+   Suplementos de un Servicio (HU-63 a HU-66)
+   GET    /api/servicios/:nombre/:numero/suplementos
+   POST   /api/servicios/:nombre/:numero/suplementos
+   PUT    /api/servicios/:nombre/:numero/suplementos/:concepto
+   DELETE /api/servicios/:nombre/:numero/suplementos/:concepto
+---------------------------------------------------------- */
+router.get('/:nombre/:numero/suplementos', async (req, res) => {
+  const { nombre, numero } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT concepto, nombre, numero_servicio, precio_unitario
+       FROM Suplemento WHERE nombre = $1 AND numero_servicio = $2
+       ORDER BY concepto`,
+      [nombre, numero]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error GET /suplementos:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+router.post('/:nombre/:numero/suplementos', auth, autorizar('admin', 'director'), async (req, res) => {
+  const { nombre, numero } = req.params;
+  const { concepto, precio_unitario } = req.body;
+
+  if (!concepto || precio_unitario == null) {
+    return res.status(400).json({ error: 'Faltan concepto o precio_unitario' });
+  }
+  if (Number(precio_unitario) <= 0) {
+    return res.status(400).json({ error: 'RN-27: el precio unitario debe ser mayor a cero' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO Suplemento (concepto, nombre, numero_servicio, precio_unitario)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [concepto, nombre, numero, precio_unitario]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Este servicio ya tiene un suplemento con ese concepto' });
+    if (err.code === '23503') return res.status(400).json({ error: 'El servicio indicado no existe' });
+    console.error('Error POST /suplementos:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+router.put('/:nombre/:numero/suplementos/:concepto', auth, autorizar('admin', 'director'), async (req, res) => {
+  const { nombre, numero, concepto } = req.params;
+  const { precio_unitario } = req.body;
+
+  if (precio_unitario == null) return res.status(400).json({ error: 'Falta precio_unitario' });
+  if (Number(precio_unitario) <= 0) {
+    return res.status(400).json({ error: 'RN-27: el precio unitario debe ser mayor a cero' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE Suplemento SET precio_unitario = $1
+       WHERE concepto = $2 AND nombre = $3 AND numero_servicio = $4
+       RETURNING *`,
+      [precio_unitario, concepto, nombre, numero]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Suplemento no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error PUT /suplementos:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+router.delete('/:nombre/:numero/suplementos/:concepto', auth, autorizar('admin', 'director'), async (req, res) => {
+  const { nombre, numero, concepto } = req.params;
+  try {
+    const result = await pool.query(
+      `DELETE FROM Suplemento WHERE concepto = $1 AND nombre = $2 AND numero_servicio = $3`,
+      [concepto, nombre, numero]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Suplemento no encontrado' });
+    res.json({ mensaje: 'Suplemento eliminado' });
+  } catch (err) {
+    console.error('Error DELETE /suplementos:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/* ----------------------------------------------------------
    Crear Solicitud (HU-57)
    POST /api/servicios/:nombre/:numero/solicitudes
    Body: { documentos: ['url1', 'url2'] }
@@ -216,28 +304,43 @@ router.get('/mis-solicitudes', auth, async (req, res) => {
 
 /* ----------------------------------------------------------
    Helpers de acceso/edicion para el detalle de una Solicitud
-   (HU-58/60/61: dueño de la solicitud o personal de Secretaria)
+   (HU-58/60/61: dueño de la solicitud o personal de Secretaria;
+    HU-32/58: cualquier admin/director puede solo-leer, ya que
+    la bandeja de pasos (/pasos/pendientes) que los trae hasta
+    aca ya esta restringida a personal administrativo)
 ---------------------------------------------------------- */
-async function esSecretaria(CI) {
+async function esPersonalDe(CI, departamentos) {
   const r = await pool.query(
-    `SELECT 1 FROM PersonalAdministrativo WHERE CI = $1 AND adscripcion_presupuestaria = 'Secretaria'`,
-    [CI]
+    `SELECT 1 FROM PersonalAdministrativo WHERE CI = $1 AND adscripcion_presupuestaria = ANY($2::varchar[])`,
+    [CI, departamentos]
   );
   return r.rows.length > 0;
 }
 
-async function obtenerAccesoSolicitud(fecha, CI) {
+async function esSecretaria(CI) {
+  return esPersonalDe(CI, ['Secretaria']);
+}
+
+async function obtenerAccesoSolicitud(fecha, usuario, { soloLectura = false } = {}) {
   const solRes = await pool.query(`SELECT * FROM Solicitud WHERE fecha_hora_creacion = $1`, [fecha]);
   if (solRes.rows.length === 0) {
     return { error: { status: 404, mensaje: 'Solicitud no encontrada' } };
   }
   const solicitud = solRes.rows[0];
+  const CI = usuario.CI;
 
-  if (solicitud.ci !== CI && !(await esSecretaria(CI))) {
-    return { error: { status: 403, mensaje: 'No tienes acceso a esta solicitud' } };
+  if (solicitud.ci === CI) return { solicitud };
+
+  // Lectura (ver detalle desde la bandeja antes de aceptar un paso, HU-32/HU-58):
+  // cualquier admin/director, sin importar su departamento.
+  if (soloLectura && (usuario.rol === 'admin' || usuario.rol === 'director')) {
+    return { solicitud };
   }
 
-  return { solicitud };
+  // Edicion/cancelacion (HU-60/61): solo Secretaria.
+  if (await esSecretaria(CI)) return { solicitud };
+
+  return { error: { status: 403, mensaje: 'No tienes acceso a esta solicitud' } };
 }
 
 function verificarEditable(solicitud) {
@@ -278,31 +381,41 @@ router.get('/solicitudes', auth, async (req, res) => {
 });
 
 /* ----------------------------------------------------------
-   Detalle de una Solicitud (dueño o Secretaria)
+   Detalle de una Solicitud (dueño, o cualquier admin/director
+   para consulta antes de aceptar un paso — HU-32/HU-58)
    GET /api/servicios/solicitudes/:fecha
 ---------------------------------------------------------- */
 router.get('/solicitudes/:fecha', auth, async (req, res) => {
   const { fecha } = req.params;
-  const CI = req.usuario.CI;
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario, { soloLectura: true });
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
-    const [docs, acomp, reserva, pasos] = await Promise.all([
+    const [docs, acomp, reserva, pasos, tiempoRes] = await Promise.all([
       pool.query(`SELECT id_documento, ruta_archivo FROM Documento_Solicitud WHERE fecha_hora_creacion_solicitud = $1`, [fecha]),
       pool.query(`SELECT documento_identidad, nombre FROM Acompanante WHERE fecha_hora_creacion = $1`, [fecha]),
       pool.query(`SELECT * FROM Reserva WHERE fecha_hora_creacion_solicitud = $1`, [fecha]),
       pool.query(`SELECT numero_paso, estado, descripcion, unidad_responsable, fecha_hora_finalizado
-                  FROM Paso_Actividad WHERE fecha_hora_creacion_solicitud = $1 ORDER BY numero_paso`, [fecha])
+                  FROM Paso_Actividad WHERE fecha_hora_creacion_solicitud = $1 ORDER BY numero_paso`, [fecha]),
+      // HU-67: dias habiles entre creacion y finalizado (NULL si aun no se resuelve)
+      pool.query(`SELECT tiempo_resolucion_solicitud($1) AS dias`, [fecha])
     ]);
+
+    solicitud.tiempo_resolucion_dias = tiempoRes.rows[0].dias;
+
+    // El viewer puede ser dueño, Secretaria (edita), o cualquier otro admin/director
+    // que solo puede leer (ej. Caja/Seguridad viendo el detalle desde su bandeja).
+    // El frontend usa esto para decidir si muestra los botones de editar/cancelar.
+    const puedeEditar = solicitud.ci === req.usuario.CI || await esSecretaria(req.usuario.CI);
 
     res.json({
       solicitud,
       documentos: docs.rows,
       acompanantes: acomp.rows,
       reserva: reserva.rows[0] || null,
-      pasos: pasos.rows
+      pasos: pasos.rows,
+      puedeEditar
     });
   } catch (err) {
     console.error('Error GET /solicitudes/:fecha:', err);
@@ -325,7 +438,7 @@ router.post('/solicitudes/:fecha/documentos', auth, async (req, res) => {
   }
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario);
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
     const editError = verificarEditable(solicitud);
@@ -354,7 +467,7 @@ router.delete('/solicitudes/:fecha/documentos/:id', auth, async (req, res) => {
   const CI = req.usuario.CI;
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario);
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
     const editError = verificarEditable(solicitud);
@@ -388,7 +501,7 @@ router.post('/solicitudes/:fecha/acompanantes', auth, async (req, res) => {
   }
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario);
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
     const editError = verificarEditable(solicitud);
@@ -415,7 +528,7 @@ router.delete('/solicitudes/:fecha/acompanantes/:documento_identidad', auth, asy
   const CI = req.usuario.CI;
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario);
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
     const editError = verificarEditable(solicitud);
@@ -455,7 +568,7 @@ router.patch('/solicitudes/:fecha', auth, async (req, res) => {
   }
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario);
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
     const editError = verificarEditable(solicitud);
@@ -500,7 +613,7 @@ router.patch('/solicitudes/:fecha/cancelar', auth, async (req, res) => {
   const CI = req.usuario.CI;
 
   try {
-    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, CI);
+    const { solicitud, error } = await obtenerAccesoSolicitud(fecha, req.usuario);
     if (error) return res.status(error.status).json({ error: error.mensaje });
 
     const editError = verificarEditable(solicitud);

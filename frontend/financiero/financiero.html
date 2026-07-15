@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCAB Services — Financiero</title>
+  <link rel="stylesheet" href="financiero.css" />
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/api.js"></script>
+</head>
+<body>
+
+  <div class="page">
+    <div class="page-header">
+      <h1 class="page-header__title">💳 Financiero</h1>
+      <p class="page-header__sub" id="page-sub">Tu estado de cuenta, folios de consumo y facturas.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-tile">
+        <div class="stat-tile__label">Total Pendiente</div>
+        <div class="stat-tile__value" id="stat-pendiente">$0.00</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile__label">Facturas Pendientes</div>
+        <div class="stat-tile__value" id="stat-count">0</div>
+      </div>
+    </div>
+
+    <!-- Buscador (solo Caja/admin) -->
+    <div class="card" id="card-buscar" style="display:none;">
+      <div class="card__header"><span class="card__title">🔎 Buscar solicitudes de un miembro (Caja)</span></div>
+      <div class="card__body">
+        <div class="search-row">
+          <input type="text" class="field__input" id="buscar-ci" placeholder="Cédula del miembro, ej. V-20111111">
+          <button class="btn btn-primary" id="btn-buscar-ci">Buscar</button>
+        </div>
+        <div class="table-wrap" style="margin-top:14px;">
+          <table>
+            <thead><tr><th>Fecha</th><th>Servicio</th><th>Estado Solicitud</th><th>Estado Folio</th><th>Acción</th></tr></thead>
+            <tbody id="tbody-buscar">
+              <tr class="empty-row"><td colspan="5">Busca por cédula para ver sus solicitudes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mis Solicitudes -->
+    <div class="card">
+      <div class="card__header"><span class="card__title">📋 Mis Solicitudes y Folios</span></div>
+      <div class="card__body" style="padding:0;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Servicio</th><th>Estado Solicitud</th><th>Acción</th></tr></thead>
+            <tbody id="tbody-mis-solicitudes">
+              <tr class="empty-row"><td colspan="4">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mis Facturas -->
+    <div class="card">
+      <div class="card__header"><span class="card__title">🧾 Mis Facturas</span></div>
+      <div class="card__body" style="padding:0;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>N° Control</th><th>Emisión</th><th>Monto Total</th><th>Estado</th><th>Acción</th></tr></thead>
+            <tbody id="tbody-facturas">
+              <tr class="empty-row"><td colspan="5">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: Folio de Consumo ────────────────────────── -->
+  <div class="modal-backdrop" id="modal-folio" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title" id="folio-titulo">Folio de Consumo</span>
+        <button class="modal__close" id="btn-close-folio">✕</button>
+      </div>
+      <div class="modal__body">
+        <p style="margin-bottom:10px;">Estado: <span class="badge" id="folio-estado-badge"></span></p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Concepto</th><th>Cant.</th><th>Precio Unit.</th><th>Impuestos</th><th>Subtotal</th><th></th></tr></thead>
+            <tbody id="tbody-items">
+              <tr class="empty-row"><td colspan="6">Sin ítems cargados.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="text-align:right; font-weight:700; margin-top:10px;">Total: $<span id="folio-total">0.00</span></p>
+
+        <div id="folio-agregar-item" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+          <h4 style="font-size:13px; color:var(--navy); margin-bottom:10px;">Agregar Ítem</h4>
+          <div class="form-grid">
+            <div class="field"><label class="field__label">Concepto</label><input type="text" class="field__input" id="item-concepto" maxlength="100"></div>
+            <div class="field"><label class="field__label">Cantidad</label><input type="number" class="field__input" id="item-cantidad" min="1" value="1"></div>
+          </div>
+          <div class="field"><label class="field__label">Impuestos ($, opcional)</label><input type="number" class="field__input" id="item-impuestos" min="0" step="0.01" value="0"></div>
+          <button type="button" class="btn btn-secondary" id="btn-add-item">+ Agregar Ítem</button>
+        </div>
+
+        <div id="folio-cerrar-container" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+          <div class="field"><label class="field__label">RIF (opcional — factura corporativa en vez de al miembro)</label><input type="text" class="field__input" id="folio-rif"></div>
+          <button type="button" class="btn btn-amber" id="btn-cerrar-folio">🔒 Cerrar Folio y Generar Factura</button>
+        </div>
+
+        <div id="folio-factura-section" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+          <h4 style="font-size:13px; color:var(--navy); margin-bottom:10px;">Factura <span id="factura-numero"></span></h4>
+          <p>Estado: <span class="badge" id="factura-estado-badge"></span> — Saldo restante: $<strong id="factura-saldo">0.00</strong></p>
+          <div class="table-wrap" style="margin-top:10px;">
+            <table>
+              <thead><tr><th>Fecha</th><th>Monto</th></tr></thead>
+              <tbody id="tbody-pagos"><tr class="empty-row"><td colspan="2">Sin pagos registrados.</td></tr></tbody>
+            </table>
+          </div>
+          <div id="factura-pagar-container" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn-secondary" id="btn-cerrar-modal-folio">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <script src="../js/sidebar.js"></script>
+  <script src="financiero.js"></script>
+</body>
+</html>
