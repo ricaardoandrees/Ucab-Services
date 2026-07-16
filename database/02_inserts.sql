@@ -2,20 +2,21 @@ INSERT INTO Miembro (CI, correo, estado_de_cuenta, fecha_nacimiento, primer_nomb
 ('V-20111111','maria.perez@ucab.edu.ve','Activa','2002-03-15','Maria','Perez','Jose',NULL,'2026-01-10 09:00:00',NULL,'Av. Libertador, Res. Las Acacias','Miranda','Caracas',25.50,'F'),
 ('V-20222222','carlos.rodriguez@ucab.edu.ve','Activa','2001-07-22','Carlos','Rodriguez','Eduardo',NULL,'2025-11-05 14:20:00',NULL,'Calle Real de Sabana Grande','Distrito Capital','Caracas',40.00,'M'),
 ('V-20333333','ana.martinez@ucab.edu.ve','Activa','2003-01-30','Ana','Martinez',NULL,'Gonzalez','2026-02-01 10:00:00',NULL,'Urb. Los Palos Grandes','Miranda','Caracas',15.75,'F'),
-('V-20444444','luis.hernandez@ucab.edu.ve','Activa','2002-09-10','Luis','Hernandez','Alberto',NULL,'2025-12-15 08:30:00',NULL,'Av. Francisco de Miranda','Miranda','Caracas',0.00,'M'),
+('V-20444444','luis.hernandez@ucab.edu.ve','Activa','2002-09-10','Luis','Hernandez','Alberto',NULL,'2025-12-15 08:30:00',NULL,'Av. Francisco de Miranda','Miranda','Caracas',20.00,'M'),
 ('V-20555555','valentina.diaz@ucab.edu.ve','Suspendida','2002-05-05','Valentina','Diaz',NULL,NULL,'2025-08-20 16:45:00',NULL,'Urb. La Florida','Distrito Capital','Caracas',5.00,'F'),
-('V-15666666','jose.gonzalez@ucab.edu.ve','Activa','1978-04-12','Jose','Gonzalez','Ramon',NULL,'2025-10-01 11:00:00','PROF-001','Av. Universidad','Distrito Capital','Caracas',10.00,'M'),
-('V-15777777','carmen.flores@ucab.edu.ve','Activa','1980-11-25','Carmen','Flores',NULL,'Diaz','2025-09-15 09:30:00','PROF-002','Urb. Bello Monte','Distrito Capital','Caracas',8.50,'F'),
-('V-12888888','pedro.ramirez@ucab.edu.ve','Activa','1985-02-18','Pedro','Ramirez',NULL,NULL,'2025-07-10 13:15:00','ADM-001','Av. Roosevelt','Distrito Capital','Caracas',12.00,'M'),
-('V-12999999','laura.torres@ucab.edu.ve','Activa','1990-06-30','Laura','Torres','Isabel',NULL,'2025-06-01 10:45:00','ADM-002','Urb. Chacao','Miranda','Caracas',20.00,'F'),
-('V-10101010','roberto.castillo@ucab.edu.ve','Activa','1995-03-08','Roberto','Castillo',NULL,'Mendoza','2025-05-20 15:00:00',NULL,'Av. Andres Bello','Distrito Capital','Caracas',0.00,'M'),
-('V-10202020','patricia.lopez@ucab.edu.ve','Activa','1996-08-14','Patricia','Lopez',NULL,NULL,'2025-04-10 12:00:00',NULL,'Urb. El Rosal','Distrito Capital','Caracas',0.00,'F'),
-('V-10303030','miguel.sanchez@ucab.edu.ve','Activa','1994-12-01','Miguel','Sanchez','Angel',NULL,'2025-03-05 09:00:00',NULL,'Av. Casanova','Distrito Capital','Caracas',0.00,'M');
+('V-06666666','jose.gonzalez@ucab.edu.ve','Activa','1978-04-12','Jose','Gonzalez','Ramon',NULL,'2025-10-01 11:00:00','PROF-001','Av. Universidad','Distrito Capital','Caracas',10.00,'M'),
+('V-07777777','carmen.flores@ucab.edu.ve','Activa','1980-11-25','Carmen','Flores',NULL,'Diaz','2025-09-15 09:30:00','PROF-002','Urb. Bello Monte','Distrito Capital','Caracas',8.50,'F'),
+('V-10888888','pedro.ramirez@ucab.edu.ve','Activa','1985-02-18','Pedro','Ramirez',NULL,NULL,'2025-07-10 13:15:00','ADM-001','Av. Roosevelt','Distrito Capital','Caracas',12.00,'M'),
+('V-13999999','laura.torres@ucab.edu.ve','Activa','1990-06-30','Laura','Torres','Isabel',NULL,'2025-06-01 10:45:00','ADM-002','Urb. Chacao','Miranda','Caracas',20.00,'F'),
+('V-17101010','roberto.castillo@ucab.edu.ve','Activa','1995-03-08','Roberto','Castillo',NULL,'Mendoza','2025-05-20 15:00:00',NULL,'Av. Andres Bello','Distrito Capital','Caracas',0.00,'M'),
+('V-18202020','patricia.lopez@ucab.edu.ve','Activa','1996-08-14','Patricia','Lopez',NULL,NULL,'2025-04-10 12:00:00',NULL,'Urb. El Rosal','Distrito Capital','Caracas',0.00,'F'),
+('V-16303030','miguel.sanchez@ucab.edu.ve','Activa','1994-12-01','Miguel','Sanchez','Angel',NULL,'2025-03-05 09:00:00',NULL,'Av. Casanova','Distrito Capital','Caracas',0.00,'M'),
+('V-12444444','sofia.blanco@ucab.edu.ve','Activa','1988-07-19','Sofia','Blanco',NULL,'Reyes','2025-08-01 10:00:00','ADM-003','Av. Libertador, Res. Parque Central','Distrito Capital','Caracas',0.00,'F');
 
 INSERT INTO Egresado (CI, indice_final, titulo, ano_graduacion) VALUES
-('V-10101010',16.50,'Ing. Informatico',2024),
-('V-10202020',17.20,'Lic. Administracion',2023),
-('V-10303030',15.80,'Ingeniero Civil',2022);
+('V-17101010',16.50,'Ing. Informatico',2024),
+('V-18202020',17.20,'Lic. Administracion',2023),
+('V-16303030',15.80,'Ingeniero Civil',2022);
 
 INSERT INTO Estudiante (CI, promedio_ponderado, Escuela, semestre_actual, UC_aprobadas, Facultad) VALUES
 ('V-20111111',16.00,'Informatica',6,110,'Ingenieria'),
@@ -32,12 +33,13 @@ INSERT INTO Preparador (CI, asignatura, horas) VALUES
 ('V-20444444','Programacion I',8);
 
 INSERT INTO Profesor (CI, carga_horaria, escalafon, cod_investigador) VALUES
-('V-15666666',16,'Asociado',2024001),
-('V-15777777',12,'Titular',NULL);
+('V-06666666',16,'Asociado',2024001),
+('V-07777777',12,'Titular',NULL);
 
 INSERT INTO PersonalAdministrativo (CI, adscripcion_presupuestaria, cargo, carga_semanal) VALUES
-('V-12888888','Direccion de Finanzas','Analista Financiero',40),
-('V-12999999','Secretaria General','Coordinadora Admin.',40);
+('V-10888888','Caja','Funcionario',40),
+('V-13999999','Secretaria','Director',40),
+('V-12444444','Oficina','Funcionario',40);
 
 INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, geolocalizacion, intentos_fallidos, MFA) VALUES
 ('2026-06-01 08:15:00','DEV-A1B2C3','V-20111111','Caracas, Venezuela',0,'Activo'),
@@ -47,13 +49,14 @@ INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, geolocalizacion, intentos
 ('2026-06-03 07:45:00','DEV-G7H8I9','V-20333333','Caracas, Venezuela',0,'Activo'),
 ('2026-06-04 16:20:00','DEV-J1K2L3','V-20444444','Caracas, Venezuela',2,'Inactivo'),
 ('2026-06-05 11:05:00','DEV-M4N5O6','V-20555555','Caracas, Venezuela',3,'Inactivo'),
-('2026-06-06 09:00:00','DEV-P7Q8R9','V-15666666','Caracas, Venezuela',0,'Activo'),
-('2026-06-07 13:30:00','DEV-S1T2U3','V-15777777','Caracas, Venezuela',0,'Activo'),
-('2026-06-01 10:45:00','DEV-V4W5X6','V-12888888','Caracas, Venezuela',0,'Activo'),
-('2026-06-02 08:00:00','DEV-Y7Z8A9','V-12999999','Caracas, Venezuela',0,'Activo'),
-('2026-05-15 09:10:00','DEV-B1C2D3','V-10101010','Caracas, Venezuela',0,'Inactivo'),
-('2026-05-16 09:10:00','DEV-E4F5G6','V-10202020','Caracas, Venezuela',0,'Inactivo'),
-('2026-05-17 09:10:00','DEV-H7I8J9','V-10303030','Caracas, Venezuela',0,'Inactivo');
+('2026-06-06 09:00:00','DEV-P7Q8R9','V-06666666','Caracas, Venezuela',0,'Activo'),
+('2026-06-07 13:30:00','DEV-S1T2U3','V-07777777','Caracas, Venezuela',0,'Activo'),
+('2026-06-01 10:45:00','DEV-V4W5X6','V-10888888','Caracas, Venezuela',0,'Activo'),
+('2026-06-02 08:00:00','DEV-Y7Z8A9','V-13999999','Caracas, Venezuela',0,'Activo'),
+('2026-05-15 09:10:00','DEV-B1C2D3','V-17101010','Caracas, Venezuela',0,'Inactivo'),
+('2026-05-16 09:10:00','DEV-E4F5G6','V-18202020','Caracas, Venezuela',0,'Inactivo'),
+('2026-05-17 09:10:00','DEV-H7I8J9','V-16303030','Caracas, Venezuela',0,'Inactivo'),
+('2026-06-03 09:00:00','DEV-C3D4E5','V-12444444','Caracas, Venezuela',0,'Activo');
 
 INSERT INTO PeriodoVinculacion (Fecha_Inicio, Fecha_Fin, CI) VALUES
 ('2022-09-01 00:00:00',NULL,'V-20111111'),
@@ -61,25 +64,26 @@ INSERT INTO PeriodoVinculacion (Fecha_Inicio, Fecha_Fin, CI) VALUES
 ('2023-03-01 00:00:00',NULL,'V-20333333'),
 ('2021-03-01 00:00:00',NULL,'V-20444444'),
 ('2022-03-01 00:00:00','2025-12-15 00:00:00','V-20555555'),
-('2010-01-15 00:00:00',NULL,'V-15666666'),
-('2008-09-01 00:00:00',NULL,'V-15777777'),
-('2015-06-01 00:00:00',NULL,'V-12888888'),
-('2018-02-01 00:00:00',NULL,'V-12999999'),
-('2018-09-01 00:00:00','2024-07-15 00:00:00','V-10101010'),
-('2017-09-01 00:00:00','2023-07-15 00:00:00','V-10202020'),
-('2016-09-01 00:00:00','2022-07-15 00:00:00','V-10303030');
+('2010-01-15 00:00:00',NULL,'V-06666666'),
+('2008-09-01 00:00:00',NULL,'V-07777777'),
+('2015-06-01 00:00:00',NULL,'V-10888888'),
+('2018-02-01 00:00:00',NULL,'V-13999999'),
+('2018-09-01 00:00:00','2024-07-15 00:00:00','V-17101010'),
+('2017-09-01 00:00:00','2023-07-15 00:00:00','V-18202020'),
+('2016-09-01 00:00:00','2022-07-15 00:00:00','V-16303030'),
+('2019-03-01 00:00:00',NULL,'V-12444444');
 
 INSERT INTO Vehiculo (Placa, Modelo, Color, Tipo, Ano, CI) VALUES
 ('ABC-123','Toyota Corolla','Blanco','Carro',2020,'V-20111111'),
-('XYZ-789','Honda Civic','Gris','Carro',2019,'V-15666666'),
-('DEF-456','Yamaha YBR','Negro','Moto',2021,'V-12888888'),
-('GHI-321','Chevrolet Aveo','Azul','Carro',2018,'V-10202020');
+('XYZ-789','Honda Civic','Gris','Carro',2019,'V-06666666'),
+('DEF-456','Yamaha YBR','Negro','Moto',2021,'V-10888888'),
+('GHI-321','Chevrolet Aveo','Azul','Carro',2018,'V-18202020');
 
 INSERT INTO Beneficiario (CI, Nombre, Parentesco, fecha_nacimiento, estatus_cobertura, fecha_inicio, fecha_fin, CI_miembro) VALUES
-('V-30111111','Sofia Gonzalez','Hija','2020-05-01','Habilitado','2020-06-01',NULL,'V-15666666'),
-('V-30222222','Mateo Flores','Hijo','2021-09-15','Habilitado','2021-10-01',NULL,'V-15777777'),
-('V-08111111','Rosa Ramirez','Esposa','1986-01-10','Habilitado','2010-01-01',NULL,'V-12888888'),
-('V-09222222','Daniel Torres','Esposo','1988-03-20','Habilitado','2015-05-05',NULL,'V-12999999');
+('V-30111111','Sofia Gonzalez','Hija','2020-05-01','Habilitado','2020-06-01',NULL,'V-06666666'),
+('V-30222222','Mateo Flores','Hijo','2021-09-15','Habilitado','2021-10-01',NULL,'V-07777777'),
+('V-08111111','Rosa Ramirez','Esposa','1986-01-10','Habilitado','2010-01-01',NULL,'V-10888888'),
+('V-09222222','Daniel Torres','Esposo','1988-03-20','Habilitado','2015-05-05',NULL,'V-13999999');
 
 INSERT INTO CargaMenor (CI, centro_educacion_inicial, esquema_vacunacion) VALUES
 ('V-30111111','Centro de Educacion Inicial Sucre','Completo'),
@@ -115,8 +119,8 @@ INSERT INTO OfertaLaboral (Fecha_Oferta, cargo, RIF, responsabilidades, perfil_b
 ('2026-03-01 08:00:00','Cajero','J-34567890-1','Atencion al cliente en cafeteria','Estudiante activo, disponibilidad horaria','Comidas incluidas','Finalizada');
 
 INSERT INTO Postula (CI, Fecha_Oferta, cargo, RIF) VALUES
-('V-10101010','2026-04-05 10:00:00','Ing. Sist. Junior','J-23456789-0'),
-('V-10202020','2026-04-01 09:00:00','Analista Compensac.','J-12345678-9'),
+('V-17101010','2026-04-05 10:00:00','Ing. Sist. Junior','J-23456789-0'),
+('V-18202020','2026-04-01 09:00:00','Analista Compensac.','J-12345678-9'),
 ('V-20444444','2026-03-01 08:00:00','Cajero','J-34567890-1');
 
 INSERT INTO Voluntariado (nombre, ID_EP, descripcion, fecha_inicio, fecha_fin, estado) VALUES
@@ -128,7 +132,7 @@ INSERT INTO Inscribe (CI, nombre) VALUES
 ('V-20111111','Jornada de Reforestacion'),
 ('V-20333333','Jornada de Reforestacion'),
 ('V-20222222','Banco de Alimentos UCAB'),
-('V-10101010','Tutoria Escolar Comunit.');
+('V-17101010','Tutoria Escolar Comunit.');
 
 INSERT INTO Sede (nombre, ubicacion) VALUES
 ('Montalban','Caracas, Distrito Capital'),
@@ -162,6 +166,40 @@ INSERT INTO Publica (nombre, numero_servicio, ID_EP) VALUES
 ('Clases de Natacion',1,3),
 ('Reserva de Puesto de Estacionamiento',1,8);
 
+-- Plantilla de pasos por servicio (HU-68): trg_generar_pasos_solicitud copia
+-- estas filas a Paso_Actividad automaticamente al insertar cada Solicitud.
+INSERT INTO PlantillaPaso (nombre_servicio, numero_servicio, numero_paso, descripcion, unidad_responsable) VALUES
+('Consulta Medica General',1,1,'Verificacion de solvencia en caja','Caja'),
+('Consulta Medica General',1,2,'Atencion medica en consultorio','Oficina'),
+('Examen de Laboratorio',1,1,'Verificacion de orden medica','Caja'),
+('Examen de Laboratorio',1,2,'Toma de muestra de laboratorio','Oficina'),
+('Curso de Extension en Python',1,1,'Inscripcion confirmada en el curso','Secretaria'),
+('Curso de Extension en Python',1,2,'Finalizacion y emision de certificado','Secretaria'),
+('Diplomado en Gerencia de Proyectos',1,1,'Verificacion de titulo universitario','Secretaria'),
+('Diplomado en Gerencia de Proyectos',1,2,'Confirmacion de cupo en el diplomado','Secretaria'),
+('Alquiler de Auditorio Hermano Lanz',1,1,'Verificacion de disponibilidad del auditorio','Oficina'),
+('Alquiler de Auditorio Hermano Lanz',1,2,'Confirmacion y cierre del evento','Oficina'),
+('Uso de Cancha Deportiva',1,1,'Verificacion de carnet vigente','Caja'),
+('Uso de Cancha Deportiva',1,2,'Confirmacion de horario de cancha','Oficina'),
+('Clases de Natacion',1,1,'Verificacion de certificado medico','Caja'),
+('Clases de Natacion',1,2,'Finalizacion del ciclo de clases','Oficina'),
+('Reserva de Puesto de Estacionamiento',1,1,'Verificacion de vehiculo registrado','Secretaria'),
+('Reserva de Puesto de Estacionamiento',1,2,'Confirmacion de asignacion de puesto','Oficina');
+
+-- Ajusta debe existir ANTES de Historial_Tarifas: fn_validar_limites_tarifa
+-- (RN-23) exige un ajuste de categoria+sede para poder validar cada tarifa.
+INSERT INTO Ajusta (nombre_categoria, nombre_sede, aumento, maximo_limite, minimo_limite) VALUES
+('Salud','Montalban',0.00,200.00,20.00),
+('Salud','Guayana',-10.00,150.00,15.00),
+('Educacion Continua','Montalban',5.00,500.00,50.00),
+('Educacion Continua','Guayana',0.00,400.00,40.00),
+('Cultura','Montalban',0.00,300.00,30.00),
+('Cultura','Guayana',-5.00,250.00,25.00),
+('Deporte','Montalban',0.00,60.00,5.00),
+('Deporte','Guayana',-5.00,50.00,5.00),
+('Estacionamiento','Montalban',0.00,20.00,2.00),
+('Estacionamiento','Guayana',0.00,15.00,2.00);
+
 INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_servicio, precio_final, perfil_solicitante) VALUES
 ('2026-01-01 00:00:00','Consulta Medica General',1,25.0,'Miembro Activo'),
 ('2026-01-01 00:00:00','Consulta Medica General',1,30.0,'Egresado'),
@@ -173,8 +211,8 @@ INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_serv
 ('2026-01-01 00:00:00','Curso de Extension en Python',1,96.0,'Egresado'),
 ('2026-01-01 00:00:00','Curso de Extension en Python',1,120.0,'Publico Externo'),
 ('2026-01-01 00:00:00','Diplomado en Gerencia de Proyectos',1,350.0,'Miembro Activo'),
-('2026-01-01 00:00:00','Diplomado en Gerencia de Proyectos',1,420.0,'Egresado'),
-('2026-01-01 00:00:00','Diplomado en Gerencia de Proyectos',1,525.0,'Publico Externo'),
+('2026-01-01 00:00:00','Diplomado en Gerencia de Proyectos',1,380.0,'Egresado'),
+('2026-01-01 00:00:00','Diplomado en Gerencia de Proyectos',1,400.0,'Publico Externo'),
 ('2026-01-01 00:00:00','Alquiler de Auditorio Hermano Lanz',1,150.0,'Miembro Activo'),
 ('2026-01-01 00:00:00','Alquiler de Auditorio Hermano Lanz',1,180.0,'Egresado'),
 ('2026-01-01 00:00:00','Alquiler de Auditorio Hermano Lanz',1,225.0,'Publico Externo'),
@@ -194,15 +232,15 @@ INSERT INTO Edificacion (nombre, direccion_exacta, nombre_sede) VALUES
 ('Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana'),
 ('Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana');
 
-INSERT INTO EspacioFisico (numero, nombre_edif, direccion_exacta, nombre_sede, capacidad_max, disponibilidad) VALUES
-(1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',250,'Disponible'),
-(2,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',40,'Disponible'),
-(1,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',30,'Disponible'),
-(2,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',60,'No Disponible'),
-(1,'Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana',20,'Disponible'),
-(2,'Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana',35,'Disponible'),
-(1,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana',25,'Disponible'),
-(2,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana',25,'Disponible');
+INSERT INTO EspacioFisico (numero, nombre_edif, direccion_exacta, nombre_sede, capacidad_max, disponibilidad, nombre) VALUES
+(1,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',250,'Disponible','Auditorio Hermano Lanz'),
+(2,'Edificio de Postgrado','Av. Teheran, Montalban','Montalban',40,'Disponible','Sala de Postgrado 1'),
+(1,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',30,'Disponible','Cancha Multiuso Cincuentenario'),
+(2,'Edificio Cincuentenario','Av. Teheran, Montalban','Montalban',60,'No Disponible','Salon de Usos Multiples'),
+(1,'Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana',20,'Disponible','Sala de Reuniones 1'),
+(2,'Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana',35,'Disponible','Auditorio Guayana'),
+(1,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana',25,'Disponible','Laboratorio de Informatica'),
+(2,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana',25,'Disponible','Laboratorio Clinico');
 
 -- Servicio se inserto antes de que existieran los EspacioFisico; se amarra
 -- aqui el espacio fijo de los servicios de tipo alquiler de espacio.
@@ -223,18 +261,6 @@ INSERT INTO Recursos (numero, nombre_espacio_fisico, direccion_exacta, nombre_se
 (1,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana','Servidores'),
 (2,'Edificio de Laboratorios','Av. Guayana, Puerto Ordaz','Guayana','Microscopios');
 
-INSERT INTO Ajusta (nombre_categoria, nombre_sede, aumento, maximo_limite, minimo_limite) VALUES
-('Salud','Montalban',0.00,200.00,20.00),
-('Salud','Guayana',-10.00,150.00,15.00),
-('Educacion Continua','Montalban',5.00,500.00,50.00),
-('Educacion Continua','Guayana',0.00,400.00,40.00),
-('Cultura','Montalban',0.00,300.00,30.00),
-('Cultura','Guayana',-5.00,250.00,25.00),
-('Deporte','Montalban',0.00,60.00,5.00),
-('Deporte','Guayana',-5.00,50.00,5.00),
-('Estacionamiento','Montalban',0.00,20.00,2.00),
-('Estacionamiento','Guayana',0.00,15.00,2.00);
-
 INSERT INTO Estacionamiento (nombre, nombre_sede, capacidad_maxima, ubicacion) VALUES
 ('Estacionamiento Norte','Montalban',50,'Entrada Norte Campus Montalban'),
 ('Estacionamiento Guayana','Guayana',30,'Entrada Principal Campus Guayana');
@@ -253,36 +279,57 @@ INSERT INTO Solicitud (fecha_hora_creacion, CI, nombre_servicio, numero_servicio
 ('2026-05-01 09:00:00','V-20111111','Consulta Medica General',1,'Completada','2026-05-01 10:30:00'),
 ('2026-05-02 10:15:00','V-20222222','Examen de Laboratorio',1,'Completada','2026-05-02 11:00:00'),
 ('2026-05-03 14:00:00','V-20333333','Curso de Extension en Python',1,'Completada','2026-05-10 09:00:00'),
-('2026-05-04 08:30:00','V-15666666','Diplomado en Gerencia de Proyectos',1,'En Proceso',NULL),
-('2026-05-05 16:00:00','V-12999999','Alquiler de Auditorio Hermano Lanz',1,'Completada','2026-05-05 18:00:00'),
+('2026-05-04 08:30:00','V-06666666','Diplomado en Gerencia de Proyectos',1,'En Proceso',NULL),
+('2026-05-05 16:00:00','V-13999999','Alquiler de Auditorio Hermano Lanz',1,'Completada','2026-05-05 18:00:00'),
 ('2026-05-06 07:45:00','V-20444444','Uso de Cancha Deportiva',1,'Completada','2026-05-06 09:45:00'),
 ('2026-05-07 11:20:00','V-20111111','Clases de Natacion',1,'Completada','2026-05-14 12:00:00'),
-('2026-05-08 13:10:00','V-10202020','Consulta Medica General',1,'Cancelada',NULL),
-('2026-05-09 09:50:00','V-15777777','Uso de Cancha Deportiva',1,'En Proceso',NULL),
+('2026-05-08 13:10:00','V-18202020','Consulta Medica General',1,'Cancelada',NULL),
+('2026-05-09 09:50:00','V-07777777','Uso de Cancha Deportiva',1,'En Proceso',NULL),
 ('2026-05-10 15:30:00','V-20222222','Clases de Natacion',1,'Completada','2026-05-17 16:00:00'),
 ('2026-05-11 08:00:00','V-20111111','Reserva de Puesto de Estacionamiento',1,'Completada','2026-05-11 08:10:00');
 
-INSERT INTO Paso_Actividad (numero_paso, fecha_hora_creacion_solicitud, estado, descripcion, CI, fecha_hora_finalizado) VALUES
-(1,'2026-05-01 09:00:00','Completado','Verificacion de solvencia en caja','V-12888888','2026-05-01 09:20:00'),
-(2,'2026-05-01 09:00:00','Completado','Atencion medica en consultorio','V-15666666','2026-05-01 10:30:00'),
-(1,'2026-05-02 10:15:00','Completado','Verificacion de orden medica','V-12888888','2026-05-02 10:30:00'),
-(2,'2026-05-02 10:15:00','Completado','Toma de muestra de laboratorio','V-15666666','2026-05-02 11:00:00'),
-(1,'2026-05-03 14:00:00','Completado','Inscripcion confirmada en el curso','V-12999999','2026-05-03 15:00:00'),
-(2,'2026-05-03 14:00:00','Completado','Finalizacion y emision de certificado','V-12999999','2026-05-10 09:00:00'),
-(1,'2026-05-04 08:30:00','Completado','Verificacion de titulo universitario','V-12999999','2026-05-04 10:00:00'),
-(2,'2026-05-04 08:30:00','Pendiente','Confirmacion de cupo en el diplomado','V-12999999',NULL),
-(1,'2026-05-05 16:00:00','Completado','Verificacion de disponibilidad del auditorio','V-12999999','2026-05-05 16:30:00'),
-(2,'2026-05-05 16:00:00','Completado','Confirmacion y cierre del evento','V-12999999','2026-05-05 18:00:00'),
-(1,'2026-05-06 07:45:00','Completado','Verificacion de carnet vigente','V-12888888','2026-05-06 08:00:00'),
-(2,'2026-05-06 07:45:00','Completado','Uso de cancha confirmado','V-12888888','2026-05-06 09:45:00'),
-(1,'2026-05-07 11:20:00','Completado','Verificacion de certificado medico','V-12888888','2026-05-07 11:40:00'),
-(2,'2026-05-07 11:20:00','Completado','Finalizacion del ciclo de clases','V-12888888','2026-05-14 12:00:00'),
-(1,'2026-05-08 13:10:00','Completado','Solicitud cancelada por el miembro','V-12888888','2026-05-08 13:15:00'),
-(1,'2026-05-09 09:50:00','Completado','Verificacion de carnet vigente','V-12888888','2026-05-09 10:05:00'),
-(2,'2026-05-09 09:50:00','Pendiente','Confirmacion de horario de cancha','V-12888888',NULL),
-(1,'2026-05-10 15:30:00','Completado','Verificacion de certificado medico','V-12888888','2026-05-10 15:45:00'),
-(2,'2026-05-10 15:30:00','Completado','Finalizacion del ciclo de clases','V-12888888','2026-05-17 16:00:00'),
-(1,'2026-05-11 08:00:00','Completado','Verificacion de vehiculo registrado','V-12999999','2026-05-11 08:10:00');
+-- Paso_Actividad ya NO se inserta a mano: trg_generar_pasos_solicitud los
+-- genera solos ('Pendiente', sin CI) a partir de PlantillaPaso al insertar
+-- cada Solicitud de arriba. Aqui solo se marcan como completados los pasos
+-- que ya ejecuto el funcionario de la unidad responsable correspondiente
+-- (Caja = V-10888888, Secretaria = V-13999999, Oficina = V-12444444),
+-- respetando RN-34/RN-37 (orden secuencial, solo el responsable completa).
+-- No se fija fecha_hora_finalizado a mano: trg_bitacora_paso_finalizado la
+-- pisa siempre con clock_timestamp() al completar un paso (bitacora
+-- inalterable), asi que cualquier valor literal aqui seria ignorado.
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-01 09:00:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-01 09:00:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-02 10:15:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-02 10:15:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-13999999' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-03 14:00:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-13999999' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-03 14:00:00';
+
+-- Diplomado (En Proceso): solo el paso 1 se completo, el 2 queda Pendiente.
+UPDATE Paso_Actividad SET estado='Completado', CI='V-13999999' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-04 08:30:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-05 16:00:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-05 16:00:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-06 07:45:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-06 07:45:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-07 11:20:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-07 11:20:00';
+
+-- Consulta Medica cancelada: paso 1 se cierra con nota de cancelacion, el
+-- paso 2 (atencion medica) nunca llego a ejecutarse y queda Pendiente.
+UPDATE Paso_Actividad SET estado='Completado', descripcion='Solicitud cancelada por el miembro', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-08 13:10:00';
+
+-- Uso de Cancha (En Proceso): solo el paso 1 se completo.
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-09 09:50:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-10 15:30:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-10 15:30:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-13999999' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-11 08:00:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-11 08:00:00';
 
 INSERT INTO Acompanante (documento_identidad, nombre, fecha_hora_creacion) VALUES
 ('V-40111111','Gabriel Suarez','2026-05-05 16:00:00'),
@@ -303,13 +350,17 @@ WHERE fecha_hora_creacion_solicitud IN (
     '2026-05-11 08:00:00'
 );
 
+-- OJO: un Item_Consumo solo puede referenciar la tarifa de un Servicio
+-- (Historial_Tarifas), no la de un Suplemento (fn_validar_precio_item exige
+-- que precio_unitario == precio_final de esa tarifa). Activar un Suplemento
+-- como cargo (Equipo de Sonido, Catering, etc.) todavia no tiene un camino
+-- valido en el modelo actual -- es una integracion pendiente, no se simula
+-- aqui con precios inventados que rompan RN-42.
 INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud, fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante, cantidad, precio_unitario, impuestos) VALUES
 ('Consulta Medica General','2026-05-01 09:01:00','2026-05-01 09:00:00','2026-05-01 09:00:00','2026-01-01 00:00:00','Consulta Medica General',1,'Miembro Activo',1,25.0,4.0),
 ('Examen de Laboratorio','2026-05-02 10:16:00','2026-05-02 10:15:00','2026-05-02 10:15:00','2026-01-01 00:00:00','Examen de Laboratorio',1,'Miembro Activo',1,15.0,2.4),
 ('Curso de Extension en Python','2026-05-03 14:01:00','2026-05-03 14:00:00','2026-05-03 14:00:00','2026-01-01 00:00:00','Curso de Extension en Python',1,'Miembro Activo',1,80.0,12.8),
 ('Alquiler de Auditorio Hermano Lanz','2026-05-05 16:01:00','2026-05-05 16:00:00','2026-05-05 16:00:00','2026-01-01 00:00:00','Alquiler de Auditorio Hermano Lanz',1,'Miembro Activo',1,150.0,24.0),
-('Equipo de Sonido','2026-05-05 16:02:00','2026-05-05 16:00:00','2026-05-05 16:00:00','2026-01-01 00:00:00','Alquiler de Auditorio Hermano Lanz',1,'Miembro Activo',1,50.0,8.0),
-('Servicio de Catering','2026-05-05 16:03:00','2026-05-05 16:00:00','2026-05-05 16:00:00','2026-01-01 00:00:00','Alquiler de Auditorio Hermano Lanz',1,'Miembro Activo',1,80.0,12.8),
 ('Uso de Cancha Deportiva','2026-05-06 07:46:00','2026-05-06 07:45:00','2026-05-06 07:45:00','2026-01-01 00:00:00','Uso de Cancha Deportiva',1,'Miembro Activo',1,10.0,1.6),
 ('Clases de Natacion','2026-05-07 11:21:00','2026-05-07 11:20:00','2026-05-07 11:20:00','2026-01-01 00:00:00','Clases de Natacion',1,'Miembro Activo',1,40.0,6.4),
 ('Clases de Natacion','2026-05-10 15:31:00','2026-05-10 15:30:00','2026-05-10 15:30:00','2026-01-01 00:00:00','Clases de Natacion',1,'Miembro Activo',1,40.0,6.4),
@@ -319,7 +370,7 @@ INSERT INTO Factura (numero_de_control, estado, monto_total, fecha_de_emision, f
 (1,'Pagada',29.0,'2026-05-01 10:30:00','2026-05-01 09:00:00','2026-05-01 09:00:00',NULL,'V-20111111'),
 (2,'Pagada',17.4,'2026-05-02 11:00:00','2026-05-02 10:15:00','2026-05-02 10:15:00',NULL,'V-20222222'),
 (3,'Pagada',92.8,'2026-05-10 09:00:00','2026-05-03 14:00:00','2026-05-03 14:00:00',NULL,'V-20333333'),
-(4,'Parcialmente Pagada',324.8,'2026-05-05 18:00:00','2026-05-05 16:00:00','2026-05-05 16:00:00',NULL,'V-12999999'),
+(4,'Parcialmente Pagada',174.0,'2026-05-05 18:00:00','2026-05-05 16:00:00','2026-05-05 16:00:00',NULL,'V-13999999'),
 (5,'Pagada',11.6,'2026-05-06 09:45:00','2026-05-06 07:45:00','2026-05-06 07:45:00',NULL,'V-20444444'),
 (6,'Pagada',46.4,'2026-05-14 12:00:00','2026-05-07 11:20:00','2026-05-07 11:20:00',NULL,'V-20111111'),
 (7,'Pendiente',46.4,'2026-05-17 16:00:00','2026-05-10 15:30:00','2026-05-10 15:30:00',NULL,'V-20222222'),
