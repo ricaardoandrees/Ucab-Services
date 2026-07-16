@@ -217,8 +217,14 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
   }
 
+  // BEGIN/COMMIT/ROLLBACK en un client dedicado (no en el pool compartido):
+  // si el CREATE USER falla, el ROLLBACK debe deshacer tambien el INSERT
+  // en Miembro, o queda una ficha huerfana sin contrasena (como paso antes).
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `INSERT INTO Miembro
         (ci, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
          fecha_nacimiento, sexo, calle1, estado, residencia, num_personal,
@@ -232,8 +238,10 @@ router.post('/register', async (req, res) => {
 
     const safeCI       = CI.replace(/"/g, '');
     const safePassword = contrasena.replace(/'/g, "''");
-    await pool.query(`CREATE USER "${safeCI}" WITH PASSWORD '${safePassword}'`);
-    await pool.query(`GRANT rol_operador TO "${safeCI}"`);
+    await client.query(`CREATE USER "${safeCI}" WITH PASSWORD '${safePassword}'`);
+    await client.query(`GRANT rol_operador TO "${safeCI}"`);
+
+    await client.query('COMMIT');
 
     res.status(201).json({
       mensaje: 'Miembro registrado exitosamente',
@@ -241,11 +249,14 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.code === '23505') {
       return res.status(409).json({ error: 'La cédula o correo ya está registrado' });
     }
     console.error('Error en register:', err);
     res.status(500).json({ error: err.detail || err.message || 'Error interno del servidor' });
+  } finally {
+    client.release();
   }
 });
 

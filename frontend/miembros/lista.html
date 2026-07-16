@@ -144,6 +144,28 @@
     </div>
   </div>
 
+  <!-- ── Modal: Resetear Contraseña ── -->
+  <div class="modal-backdrop" id="modal-reset-pass" style="display:none">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Resetear Contraseña</h3>
+        <button class="modal__close" onclick="cerrarModal('modal-reset-pass')">✕</button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">Miembro: <strong id="modal-reset-pass-nombre"></strong></p>
+        <div class="field">
+          <label class="field__label">Nueva contraseña (mín. 6 caracteres)</label>
+          <input class="field__input" type="password" id="reset-pass-nueva" minlength="6" />
+        </div>
+        <div class="alert alert--error" id="alert-reset-pass" style="display:none"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-ghost" onclick="cerrarModal('modal-reset-pass')">Cancelar</button>
+        <button class="btn-primary" id="btn-confirmar-reset-pass">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Modal: Confirmar Eliminar ── -->
   <div class="modal-backdrop" id="modal-eliminar" style="display:none">
     <div class="modal">
