@@ -350,12 +350,11 @@ WHERE fecha_hora_creacion_solicitud IN (
     '2026-05-11 08:00:00'
 );
 
--- OJO: un Item_Consumo solo puede referenciar la tarifa de un Servicio
--- (Historial_Tarifas), no la de un Suplemento (fn_validar_precio_item exige
--- que precio_unitario == precio_final de esa tarifa). Activar un Suplemento
--- como cargo (Equipo de Sonido, Catering, etc.) todavia no tiene un camino
--- valido en el modelo actual -- es una integracion pendiente, no se simula
--- aqui con precios inventados que rompan RN-42.
+-- Item_Consumo toma su precio de exactamente una de dos fuentes
+-- (categorizacion Historial_Tarifas / Suplemento, ver CK_ITEM_FUENTE_PRECIO_XOR):
+-- cargos "estandar" del servicio mismo (fecha_hora_vigencia+perfil_solicitante,
+-- validados contra Historial_Tarifas) o cargos de un Suplemento del catalogo
+-- de ese servicio (concepto_suplemento, validado contra Suplemento.precio_unitario).
 INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud, fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante, cantidad, precio_unitario, impuestos) VALUES
 ('Consulta Medica General','2026-05-01 09:01:00','2026-05-01 09:00:00','2026-05-01 09:00:00','2026-01-01 00:00:00','Consulta Medica General',1,'Miembro Activo',1,25.0,4.0),
 ('Examen de Laboratorio','2026-05-02 10:16:00','2026-05-02 10:15:00','2026-05-02 10:15:00','2026-01-01 00:00:00','Examen de Laboratorio',1,'Miembro Activo',1,15.0,2.4),
@@ -366,11 +365,14 @@ INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_
 ('Clases de Natacion','2026-05-10 15:31:00','2026-05-10 15:30:00','2026-05-10 15:30:00','2026-01-01 00:00:00','Clases de Natacion',1,'Miembro Activo',1,40.0,6.4),
 ('Reserva de Puesto de Estacionamiento','2026-05-11 08:01:00','2026-05-11 08:00:00','2026-05-11 08:00:00','2026-01-01 00:00:00','Reserva de Puesto de Estacionamiento',1,'Miembro Activo',1,5.0,0.8);
 
+INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud, nombre_servicio, numero_servicio, concepto_suplemento, cantidad, precio_unitario, impuestos) VALUES
+('Equipo de Sonido','2026-05-05 16:02:00','2026-05-05 16:00:00','2026-05-05 16:00:00','Alquiler de Auditorio Hermano Lanz',1,'Equipo de Sonido',1,50.0,8.0);
+
 INSERT INTO Factura (numero_de_control, estado, monto_total, fecha_de_emision, fecha_hora_apertura, fecha_hora_creacion_solicitud, RIF, CI) VALUES
 (1,'Pagada',29.0,'2026-05-01 10:30:00','2026-05-01 09:00:00','2026-05-01 09:00:00',NULL,'V-20111111'),
 (2,'Pagada',17.4,'2026-05-02 11:00:00','2026-05-02 10:15:00','2026-05-02 10:15:00',NULL,'V-20222222'),
 (3,'Pagada',92.8,'2026-05-10 09:00:00','2026-05-03 14:00:00','2026-05-03 14:00:00',NULL,'V-20333333'),
-(4,'Parcialmente Pagada',174.0,'2026-05-05 18:00:00','2026-05-05 16:00:00','2026-05-05 16:00:00',NULL,'V-13999999'),
+(4,'Parcialmente Pagada',232.0,'2026-05-05 18:00:00','2026-05-05 16:00:00','2026-05-05 16:00:00',NULL,'V-13999999'),
 (5,'Pagada',11.6,'2026-05-06 09:45:00','2026-05-06 07:45:00','2026-05-06 07:45:00',NULL,'V-20444444'),
 (6,'Pagada',46.4,'2026-05-14 12:00:00','2026-05-07 11:20:00','2026-05-07 11:20:00',NULL,'V-20111111'),
 (7,'Pendiente',46.4,'2026-05-17 16:00:00','2026-05-10 15:30:00','2026-05-10 15:30:00',NULL,'V-20222222'),

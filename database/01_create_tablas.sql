@@ -485,17 +485,25 @@ CREATE TABLE Item_Consumo (
     fecha_hora_item TIMESTAMP NOT NULL,
     fecha_hora_apertura TIMESTAMP NOT NULL,
     fecha_hora_creacion_solicitud TIMESTAMP NOT NULL,
-    fecha_hora_vigencia TIMESTAMP NOT NULL,
+    fecha_hora_vigencia TIMESTAMP,
     nombre_servicio VARCHAR(50) NOT NULL,
     numero_servicio INT NOT NULL,
-    perfil_solicitante VARCHAR(20) NOT NULL CHECK (perfil_solicitante IN ('Miembro Activo','Egresado','Publico Externo')),
+    perfil_solicitante VARCHAR(20) CHECK (perfil_solicitante IN ('Miembro Activo','Egresado','Publico Externo')),
+    concepto_suplemento VARCHAR(20),
     cantidad INT NOT NULL CHECK (cantidad > 0),
     precio_unitario NUMERIC(10,2) NOT NULL CHECK (precio_unitario > 0),
     impuestos NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (impuestos >= 0),
 
     CONSTRAINT PK_ITEM_CONSUMO PRIMARY KEY (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud),
     CONSTRAINT FK_ITEM_FOLIO FOREIGN KEY (fecha_hora_apertura, fecha_hora_creacion_solicitud) REFERENCES Folio_Consumo(fecha_hora_apertura, fecha_hora_creacion_solicitud) ON DELETE CASCADE,
-    CONSTRAINT FK_ITEM_HISTORIAL FOREIGN KEY (fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante) REFERENCES Historial_Tarifas(fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante)
+    CONSTRAINT FK_ITEM_HISTORIAL FOREIGN KEY (fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante) REFERENCES Historial_Tarifas(fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante),
+    CONSTRAINT FK_ITEM_SUPLEMENTO FOREIGN KEY (concepto_suplemento, nombre_servicio, numero_servicio) REFERENCES Suplemento(concepto, nombre, numero_servicio),
+    -- Categorizacion Historial_Tarifas / Suplemento: el precio de un item viene
+    -- de exactamente una de las dos fuentes, nunca de ambas ni de ninguna.
+    CONSTRAINT CK_ITEM_FUENTE_PRECIO_XOR CHECK (
+        (fecha_hora_vigencia IS NOT NULL AND perfil_solicitante IS NOT NULL AND concepto_suplemento IS NULL) OR
+        (fecha_hora_vigencia IS NULL AND perfil_solicitante IS NULL AND concepto_suplemento IS NOT NULL)
+    )
 );
 
 CREATE TABLE Factura (

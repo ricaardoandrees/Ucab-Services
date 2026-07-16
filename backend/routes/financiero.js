@@ -66,8 +66,9 @@ router.get('/folio/:fecha', auth, async (req, res) => {
   const usuario = req.usuario;
 
   try {
-    const solRes = await pool.query('SELECT CI FROM Solicitud WHERE fecha_hora_creacion = $1', [fecha]);
+    const solRes = await pool.query('SELECT CI, nombre_servicio, numero_servicio FROM Solicitud WHERE fecha_hora_creacion = $1', [fecha]);
     if (solRes.rows.length === 0) return res.status(404).json({ error: 'Solicitud no encontrada' });
+    const solicitud = solRes.rows[0];
 
     const esDueno = solRes.rows[0].ci === usuario.CI;
     const esStaff = usuario.rol === 'admin' || usuario.rol === 'director';
@@ -82,7 +83,7 @@ router.get('/folio/:fecha', auth, async (req, res) => {
     const folio = folioRes.rows[0];
 
     const itemsRes = await pool.query(
-      `SELECT concepto, fecha_hora_item, cantidad, precio_unitario, impuestos,
+      `SELECT concepto, fecha_hora_item, cantidad, precio_unitario, impuestos, concepto_suplemento,
               TO_CHAR(fecha_hora_item, 'YYYY-MM-DD HH24:MI:SS.MS') AS raw_fecha_item,
               (cantidad * precio_unitario + impuestos) AS subtotal
        FROM Item_Consumo
@@ -108,7 +109,12 @@ router.get('/folio/:fecha', auth, async (req, res) => {
       }
     }
 
-    res.json({ folio, items: itemsRes.rows, total, factura, puedeGestionar: esStaff });
+    const suplementosRes = await pool.query(
+      'SELECT concepto, precio_unitario FROM Suplemento WHERE nombre = $1 AND numero_servicio = $2',
+      [solicitud.nombre_servicio, solicitud.numero_servicio]
+    );
+
+    res.json({ folio, items: itemsRes.rows, total, factura, puedeGestionar: esStaff, suplementos: suplementosRes.rows });
   } catch (err) {
     console.error('Error GET /financiero/folio/:fecha:', err);
     res.status(500).json({ error: 'Error al consultar el folio' });
@@ -119,14 +125,16 @@ router.get('/folio/:fecha', auth, async (req, res) => {
    Agregar Ítem de Consumo al Folio (pieza necesaria para
    HU-71/72/73, no numerada aparte en el backlog)
    POST /api/financiero/folio/:fecha/items
-   Body: { concepto, cantidad, impuestos? }
-   Solo personal de Caja. El precio_unitario se toma de la
-   tarifa vigente en Historial_Tarifas — no lo inventa el cajero
-   (fn_validar_precio_item lo exige igual).
+   Body: { concepto, cantidad, impuestos?, concepto_suplemento? }
+   Solo personal de Caja. Sin concepto_suplemento, el precio_unitario
+   se toma de la tarifa vigente en Historial_Tarifas (cargo estandar).
+   Con concepto_suplemento, se toma de Suplemento.precio_unitario para
+   ese servicio (categorizacion Historial_Tarifas/Suplemento). El
+   cajero nunca lo inventa (fn_validar_precio_item lo exige igual).
 ---------------------------------------------------------- */
 router.post('/folio/:fecha/items', auth, autorizar('admin', 'director'), async (req, res) => {
   const { fecha } = req.params;
-  const { concepto, cantidad, impuestos } = req.body || {};
+  const { concepto, cantidad, impuestos, concepto_suplemento } = req.body || {};
 
   if (!(await esCaja(req.usuario.CI))) {
     return res.status(403).json({ error: 'Solo personal de Caja puede cargar ítems al folio' });
@@ -148,30 +156,53 @@ router.post('/folio/:fecha/items', auth, autorizar('admin', 'director'), async (
       return res.status(409).json({ error: 'El folio ya está cerrado' });
     }
 
-    const perfil = (await esEgresado(folio.ci)) ? 'Egresado' : 'Miembro Activo';
-
-    const tarifaRes = await pool.query(
-      `SELECT fecha_hora_vigencia, precio_final FROM Historial_Tarifas
-       WHERE nombre_servicio = $1 AND numero_servicio = $2 AND perfil_solicitante = $3
-         AND fecha_hora_vigencia <= NOW()
-       ORDER BY fecha_hora_vigencia DESC LIMIT 1`,
-      [folio.nombre_servicio, folio.numero_servicio, perfil]
-    );
-    if (tarifaRes.rows.length === 0) {
-      return res.status(400).json({ error: `No hay tarifa vigente para este servicio (perfil ${perfil})` });
-    }
-    const tarifa = tarifaRes.rows[0];
-
     const fechaItem = new Date();
-    const result = await pool.query(
-      `INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud,
-                                  fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante,
-                                  cantidad, precio_unitario, impuestos)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-       RETURNING *`,
-      [concepto, fechaItem, folio.fecha_hora_apertura, fecha, tarifa.fecha_hora_vigencia,
-       folio.nombre_servicio, folio.numero_servicio, perfil, cantidad, tarifa.precio_final, impuestos || 0]
-    );
+    let result;
+
+    if (concepto_suplemento) {
+      const supRes = await pool.query(
+        `SELECT precio_unitario FROM Suplemento WHERE concepto = $1 AND nombre = $2 AND numero_servicio = $3`,
+        [concepto_suplemento, folio.nombre_servicio, folio.numero_servicio]
+      );
+      if (supRes.rows.length === 0) {
+        return res.status(400).json({ error: 'Ese suplemento no existe para este servicio' });
+      }
+
+      result = await pool.query(
+        `INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud,
+                                    nombre_servicio, numero_servicio, concepto_suplemento,
+                                    cantidad, precio_unitario, impuestos)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         RETURNING *`,
+        [concepto, fechaItem, folio.fecha_hora_apertura, fecha, folio.nombre_servicio, folio.numero_servicio,
+         concepto_suplemento, cantidad, supRes.rows[0].precio_unitario, impuestos || 0]
+      );
+    } else {
+      const perfil = (await esEgresado(folio.ci)) ? 'Egresado' : 'Miembro Activo';
+
+      const tarifaRes = await pool.query(
+        `SELECT fecha_hora_vigencia, precio_final FROM Historial_Tarifas
+         WHERE nombre_servicio = $1 AND numero_servicio = $2 AND perfil_solicitante = $3
+           AND fecha_hora_vigencia <= NOW()
+         ORDER BY fecha_hora_vigencia DESC LIMIT 1`,
+        [folio.nombre_servicio, folio.numero_servicio, perfil]
+      );
+      if (tarifaRes.rows.length === 0) {
+        return res.status(400).json({ error: `No hay tarifa vigente para este servicio (perfil ${perfil})` });
+      }
+      const tarifa = tarifaRes.rows[0];
+
+      result = await pool.query(
+        `INSERT INTO Item_Consumo (concepto, fecha_hora_item, fecha_hora_apertura, fecha_hora_creacion_solicitud,
+                                    fecha_hora_vigencia, nombre_servicio, numero_servicio, perfil_solicitante,
+                                    cantidad, precio_unitario, impuestos)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+         RETURNING *`,
+        [concepto, fechaItem, folio.fecha_hora_apertura, fecha, tarifa.fecha_hora_vigencia,
+         folio.nombre_servicio, folio.numero_servicio, perfil, cantidad, tarifa.precio_final, impuestos || 0]
+      );
+    }
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error POST /financiero/folio/:fecha/items:', err);

@@ -538,12 +538,22 @@ RETURNS TRIGGER AS $$
 DECLARE
     v_precio_tarifa NUMERIC(10,2);
 BEGIN
-    SELECT precio_final INTO v_precio_tarifa
-    FROM Historial_Tarifas
-    WHERE fecha_hora_vigencia = NEW.fecha_hora_vigencia
-      AND nombre_servicio = NEW.nombre_servicio
-      AND numero_servicio = NEW.numero_servicio
-      AND perfil_solicitante = NEW.perfil_solicitante;
+    -- Categorizacion Historial_Tarifas / Suplemento (ver CK_ITEM_FUENTE_PRECIO_XOR):
+    -- un item toma su precio de exactamente una de las dos fuentes.
+    IF NEW.concepto_suplemento IS NOT NULL THEN
+        SELECT precio_unitario INTO v_precio_tarifa
+        FROM Suplemento
+        WHERE concepto = NEW.concepto_suplemento
+          AND nombre = NEW.nombre_servicio
+          AND numero_servicio = NEW.numero_servicio;
+    ELSE
+        SELECT precio_final INTO v_precio_tarifa
+        FROM Historial_Tarifas
+        WHERE fecha_hora_vigencia = NEW.fecha_hora_vigencia
+          AND nombre_servicio = NEW.nombre_servicio
+          AND numero_servicio = NEW.numero_servicio
+          AND perfil_solicitante = NEW.perfil_solicitante;
+    END IF;
 
     IF NEW.precio_unitario <> v_precio_tarifa THEN
         RAISE EXCEPTION 'RN-42: el precio_unitario (%) no coincide con la tarifa vigente (%)', NEW.precio_unitario, v_precio_tarifa;

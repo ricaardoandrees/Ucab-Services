@@ -99,6 +99,17 @@
 
         <div id="folio-agregar-item" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
           <h4 style="font-size:13px; color:var(--navy); margin-bottom:10px;">Agregar Ítem</h4>
+          <div class="field">
+            <label class="field__label">Tipo de cargo</label>
+            <select class="field__input" id="item-tipo">
+              <option value="estandar">Cargo estándar (tarifa del servicio)</option>
+              <option value="suplemento">Suplemento del servicio</option>
+            </select>
+          </div>
+          <div class="field" id="item-suplemento-field" style="display:none;">
+            <label class="field__label">Suplemento</label>
+            <select class="field__input" id="item-suplemento"></select>
+          </div>
           <div class="form-grid">
             <div class="field"><label class="field__label">Concepto</label><input type="text" class="field__input" id="item-concepto" maxlength="100"></div>
             <div class="field"><label class="field__label">Cantidad</label><input type="number" class="field__input" id="item-cantidad" min="1" value="1"></div>

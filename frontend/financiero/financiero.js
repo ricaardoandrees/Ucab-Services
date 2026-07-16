@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-cerrar-modal-folio').addEventListener('click', cerrarModalFolio);
   document.getElementById('btn-add-item').addEventListener('click', agregarItem);
   document.getElementById('btn-cerrar-folio').addEventListener('click', cerrarFolio);
+  document.getElementById('item-tipo').addEventListener('change', toggleTipoItem);
+  document.getElementById('item-suplemento').addEventListener('change', aplicarConceptoSuplemento);
 
   if (esAliadoExterno) {
     document.getElementById('page-sub').textContent = 'Facturas corporativas de tu organización.';
@@ -126,6 +128,8 @@ async function cargarFacturas() {
 async function abrirFolio(rawFecha, nombreServicio) {
   folioActual = rawFecha;
   document.getElementById('folio-titulo').textContent = `Folio — ${nombreServicio}`;
+  document.getElementById('item-tipo').value = 'estandar';
+  toggleTipoItem();
   document.getElementById('modal-folio').classList.add('open');
   await cargarFolio();
 }
@@ -146,7 +150,8 @@ async function cargarFolio() {
 }
 
 function renderFolio(data) {
-  const { folio, items, total, factura, puedeGestionar } = data;
+  const { folio, items, total, factura, puedeGestionar, suplementos } = data;
+  renderSuplementosSelect(suplementos || []);
 
   const badge = document.getElementById('folio-estado-badge');
   badge.textContent = folio.estado;
@@ -159,7 +164,7 @@ function renderFolio(data) {
   } else {
     tbody.innerHTML = items.map(i => `
       <tr>
-        <td>${esc(i.concepto)}</td>
+        <td>${esc(i.concepto)}${i.concepto_suplemento ? ' <span class="badge badge--gray">Suplemento</span>' : ''}</td>
         <td>${i.cantidad}</td>
         <td>$${Number(i.precio_unitario).toFixed(2)}</td>
         <td>$${Number(i.impuestos).toFixed(2)}</td>
@@ -198,17 +203,43 @@ function renderFolio(data) {
   }
 }
 
+// ── Tipo de cargo: estandar (tarifa del servicio) vs suplemento ──
+function renderSuplementosSelect(suplementos) {
+  const sel = document.getElementById('item-suplemento');
+  sel.innerHTML = suplementos.length === 0
+    ? '<option value="">Este servicio no tiene suplementos</option>'
+    : suplementos.map(s => `<option value="${esc(s.concepto)}">${esc(s.concepto)} — $${Number(s.precio_unitario).toFixed(2)}</option>`).join('');
+  if (document.getElementById('item-tipo').value === 'suplemento') aplicarConceptoSuplemento();
+}
+
+function toggleTipoItem() {
+  const esSuplemento = document.getElementById('item-tipo').value === 'suplemento';
+  document.getElementById('item-suplemento-field').style.display = esSuplemento ? 'block' : 'none';
+  const conceptoInput = document.getElementById('item-concepto');
+  conceptoInput.readOnly = esSuplemento;
+  if (esSuplemento) aplicarConceptoSuplemento();
+  else conceptoInput.value = '';
+}
+
+function aplicarConceptoSuplemento() {
+  document.getElementById('item-concepto').value = document.getElementById('item-suplemento').value || '';
+}
+
 // ── HU-71 (pieza necesaria): agregar item ────────────────
 async function agregarItem() {
+  const esSuplemento = document.getElementById('item-tipo').value === 'suplemento';
   const concepto = document.getElementById('item-concepto').value.trim();
   const cantidad = parseInt(document.getElementById('item-cantidad').value, 10);
   const impuestos = parseFloat(document.getElementById('item-impuestos').value) || 0;
+  const concepto_suplemento = esSuplemento ? document.getElementById('item-suplemento').value : null;
 
   if (!concepto || !cantidad || cantidad <= 0) return alert('Completa el concepto y una cantidad válida.');
+  if (esSuplemento && !concepto_suplemento) return alert('Selecciona un suplemento.');
 
   try {
-    await apiFetch('POST', `/financiero/folio/${encodeURIComponent(folioActual)}/items`, { concepto, cantidad, impuestos });
-    document.getElementById('item-concepto').value = '';
+    await apiFetch('POST', `/financiero/folio/${encodeURIComponent(folioActual)}/items`, { concepto, cantidad, impuestos, concepto_suplemento });
+    document.getElementById('item-tipo').value = 'estandar';
+    toggleTipoItem();
     document.getElementById('item-cantidad').value = 1;
     document.getElementById('item-impuestos').value = 0;
     toast('Ítem agregado.');
