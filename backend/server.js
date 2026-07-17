@@ -3,7 +3,10 @@ const cors    = require('cors');
 require('dotenv').config();
 
 const app = express();
+const path = require('path');
 
+// Servir la carpeta frontend estáticamente para que localhost:3000 levante la página
+app.use(express.static(path.join(__dirname, '../frontend')));
 app.use(cors());
 app.use(express.json());
 

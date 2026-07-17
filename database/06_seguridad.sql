@@ -207,3 +207,40 @@ CREATE POLICY policy_miembro_infraestructura
     FOR ALL
     TO rol_infraestructura
     USING (true);
+
+/* ==========================================================
+   CREACIÓN DE USUARIOS DE PRUEBA Y ASIGNACIÓN DE ROLES
+   ========================================================== */
+DO $$
+BEGIN
+    -- Director (Laura Torres) - Todos los privilegios
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-13999999') THEN
+        CREATE USER "V-13999999" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador, rol_rrhh, rol_finanzas, rol_infraestructura TO "V-13999999";
+
+    -- Funcionario Caja (Pedro Ramirez) - Finanzas
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-10888888') THEN
+        CREATE USER "V-10888888" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador, rol_finanzas TO "V-10888888";
+
+    -- Funcionario Oficina (Sofia Blanco) - Infraestructura / RRHH
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-12444444') THEN
+        CREATE USER "V-12444444" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador, rol_infraestructura, rol_rrhh TO "V-12444444";
+
+    -- Estudiante Becario (Carlos Rodriguez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-20222222') THEN
+        CREATE USER "V-20222222" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-20222222";
+
+    -- Profesor (Jose Gonzalez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-06666666') THEN
+        CREATE USER "V-06666666" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-06666666";
+END
+$$;

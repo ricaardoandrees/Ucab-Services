@@ -1,17 +1,17 @@
 INSERT INTO Miembro (CI, correo, estado_de_cuenta, fecha_nacimiento, primer_nombre, primer_apellido, segundo_nombre, segundo_apellido, ult_fecha_cambio, num_personal, calle1, estado, residencia, saldo_virtual, sexo) VALUES
-('V-20111111','maria.perez@ucab.edu.ve','Activa','2002-03-15','Maria','Perez','Jose',NULL,'2026-01-10 09:00:00',NULL,'Av. Libertador, Res. Las Acacias','Miranda','Caracas',25.50,'F'),
-('V-20222222','carlos.rodriguez@ucab.edu.ve','Activa','2001-07-22','Carlos','Rodriguez','Eduardo',NULL,'2025-11-05 14:20:00',NULL,'Calle Real de Sabana Grande','Distrito Capital','Caracas',40.00,'M'),
-('V-20333333','ana.martinez@ucab.edu.ve','Activa','2003-01-30','Ana','Martinez',NULL,'Gonzalez','2026-02-01 10:00:00',NULL,'Urb. Los Palos Grandes','Miranda','Caracas',15.75,'F'),
-('V-20444444','luis.hernandez@ucab.edu.ve','Activa','2002-09-10','Luis','Hernandez','Alberto',NULL,'2025-12-15 08:30:00',NULL,'Av. Francisco de Miranda','Miranda','Caracas',20.00,'M'),
-('V-20555555','valentina.diaz@ucab.edu.ve','Suspendida','2002-05-05','Valentina','Diaz',NULL,NULL,'2025-08-20 16:45:00',NULL,'Urb. La Florida','Distrito Capital','Caracas',5.00,'F'),
-('V-06666666','jose.gonzalez@ucab.edu.ve','Activa','1978-04-12','Jose','Gonzalez','Ramon',NULL,'2025-10-01 11:00:00','PROF-001','Av. Universidad','Distrito Capital','Caracas',10.00,'M'),
-('V-07777777','carmen.flores@ucab.edu.ve','Activa','1980-11-25','Carmen','Flores',NULL,'Diaz','2025-09-15 09:30:00','PROF-002','Urb. Bello Monte','Distrito Capital','Caracas',8.50,'F'),
-('V-10888888','pedro.ramirez@ucab.edu.ve','Activa','1985-02-18','Pedro','Ramirez',NULL,NULL,'2025-07-10 13:15:00','ADM-001','Av. Roosevelt','Distrito Capital','Caracas',12.00,'M'),
-('V-13999999','laura.torres@ucab.edu.ve','Activa','1990-06-30','Laura','Torres','Isabel',NULL,'2025-06-01 10:45:00','ADM-002','Urb. Chacao','Miranda','Caracas',20.00,'F'),
-('V-17101010','roberto.castillo@ucab.edu.ve','Activa','1995-03-08','Roberto','Castillo',NULL,'Mendoza','2025-05-20 15:00:00',NULL,'Av. Andres Bello','Distrito Capital','Caracas',0.00,'M'),
-('V-18202020','patricia.lopez@ucab.edu.ve','Activa','1996-08-14','Patricia','Lopez',NULL,NULL,'2025-04-10 12:00:00',NULL,'Urb. El Rosal','Distrito Capital','Caracas',0.00,'F'),
-('V-16303030','miguel.sanchez@ucab.edu.ve','Activa','1994-12-01','Miguel','Sanchez','Angel',NULL,'2025-03-05 09:00:00',NULL,'Av. Casanova','Distrito Capital','Caracas',0.00,'M'),
-('V-12444444','sofia.blanco@ucab.edu.ve','Activa','1988-07-19','Sofia','Blanco',NULL,'Reyes','2025-08-01 10:00:00','ADM-003','Av. Libertador, Res. Parque Central','Distrito Capital','Caracas',0.00,'F');
+('V-20111111','maria.perez@ucab.edu.ve','Activa','2002-03-15','Maria','Perez','Jose',NULL,'2026-01-10 09:00:00','04141234567','Av. Libertador, Res. Las Acacias','Miranda','Caracas',25.50,'F'),
+('V-20222222','carlos.rodriguez@ucab.edu.ve','Activa','2001-07-22','Carlos','Rodriguez','Eduardo',NULL,'2025-11-05 14:20:00','04129876543','Calle Real de Sabana Grande','Distrito Capital','Caracas',40.00,'M'),
+('V-20333333','ana.martinez@ucab.edu.ve','Activa','2003-01-30','Ana','Martinez',NULL,'Gonzalez','2026-02-01 10:00:00','04165554433','Urb. Los Palos Grandes','Miranda','Caracas',15.75,'F'),
+('V-20444444','luis.hernandez@ucab.edu.ve','Activa','2002-09-10','Luis','Hernandez','Alberto',NULL,'2025-12-15 08:30:00','04241112233','Av. Francisco de Miranda','Miranda','Caracas',20.00,'M'),
+('V-20555555','valentina.diaz@ucab.edu.ve','Suspendida','2002-05-05','Valentina','Diaz',NULL,NULL,'2025-08-20 16:45:00','04143339988','Urb. La Florida','Distrito Capital','Caracas',5.00,'F'),
+('V-06666666','jose.gonzalez@ucab.edu.ve','Activa','1978-04-12','Jose','Gonzalez','Ramon',NULL,'2025-10-01 11:00:00','04124445566','Av. Universidad','Distrito Capital','Caracas',10.00,'M'),
+('V-07777777','carmen.flores@ucab.edu.ve','Activa','1980-11-25','Carmen','Flores',NULL,'Diaz','2025-09-15 09:30:00','04167778899','Urb. Bello Monte','Distrito Capital','Caracas',8.50,'F'),
+('V-10888888','pedro.ramirez@ucab.edu.ve','Activa','1985-02-18','Pedro','Ramirez',NULL,NULL,'2025-07-10 13:15:00','04145550011','Av. Roosevelt','Distrito Capital','Caracas',12.00,'M'),
+('V-13999999','laura.torres@ucab.edu.ve','Activa','1990-06-30','Laura','Torres','Isabel',NULL,'2025-06-01 10:45:00','04123334455','Urb. Chacao','Miranda','Caracas',20.00,'F'),
+('V-17101010','roberto.castillo@ucab.edu.ve','Activa','1995-03-08','Roberto','Castillo',NULL,'Mendoza','2025-05-20 15:00:00','04246667788','Av. Andres Bello','Distrito Capital','Caracas',0.00,'M'),
+('V-18202020','patricia.lopez@ucab.edu.ve','Activa','1996-08-14','Patricia','Lopez',NULL,NULL,'2025-04-10 12:00:00','04149991122','Urb. El Rosal','Distrito Capital','Caracas',0.00,'F'),
+('V-16303030','miguel.sanchez@ucab.edu.ve','Activa','1994-12-01','Miguel','Sanchez','Angel',NULL,'2025-03-05 09:00:00','04161112244','Av. Casanova','Distrito Capital','Caracas',0.00,'M'),
+('V-12444444','sofia.blanco@ucab.edu.ve','Activa','1988-07-19','Sofia','Blanco',NULL,'Reyes','2025-08-01 10:00:00','04148889900','Av. Libertador, Res. Parque Central','Distrito Capital','Caracas',0.00,'F');
 
 INSERT INTO Egresado (CI, indice_final, titulo, ano_graduacion) VALUES
 ('V-17101010',16.50,'Ing. Informatico',2024),
@@ -58,20 +58,20 @@ INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, geolocalizacion, intentos
 ('2026-05-17 09:10:00','DEV-H7I8J9','V-16303030','Caracas, Venezuela',0,'Inactivo'),
 ('2026-06-03 09:00:00','DEV-C3D4E5','V-12444444','Caracas, Venezuela',0,'Activo');
 
-INSERT INTO PeriodoVinculacion (Fecha_Inicio, Fecha_Fin, CI) VALUES
-('2022-09-01 00:00:00',NULL,'V-20111111'),
-('2021-09-01 00:00:00',NULL,'V-20222222'),
-('2023-03-01 00:00:00',NULL,'V-20333333'),
-('2021-03-01 00:00:00',NULL,'V-20444444'),
-('2022-03-01 00:00:00','2025-12-15 00:00:00','V-20555555'),
-('2010-01-15 00:00:00',NULL,'V-06666666'),
-('2008-09-01 00:00:00',NULL,'V-07777777'),
-('2015-06-01 00:00:00',NULL,'V-10888888'),
-('2018-02-01 00:00:00',NULL,'V-13999999'),
-('2018-09-01 00:00:00','2024-07-15 00:00:00','V-17101010'),
-('2017-09-01 00:00:00','2023-07-15 00:00:00','V-18202020'),
-('2016-09-01 00:00:00','2022-07-15 00:00:00','V-16303030'),
-('2019-03-01 00:00:00',NULL,'V-12444444');
+INSERT INTO PeriodoVinculacion (Fecha_Inicio, Fecha_Fin, CI, rol) VALUES
+('2022-09-01 00:00:00',NULL,'V-20111111','Estudiante'),
+('2021-09-01 00:00:00',NULL,'V-20222222','Estudiante'),
+('2023-03-01 00:00:00',NULL,'V-20333333','Estudiante'),
+('2021-03-01 00:00:00',NULL,'V-20444444','Estudiante'),
+('2022-03-01 00:00:00','2025-12-15 00:00:00','V-20555555','Estudiante'),
+('2010-01-15 00:00:00',NULL,'V-06666666','Profesor'),
+('2008-09-01 00:00:00',NULL,'V-07777777','Profesor'),
+('2015-06-01 00:00:00',NULL,'V-10888888','PersonalAdministrativo'),
+('2018-02-01 00:00:00',NULL,'V-13999999','PersonalAdministrativo'),
+('2018-09-01 00:00:00','2024-07-15 00:00:00','V-17101010','Egresado'),
+('2017-09-01 00:00:00','2023-07-15 00:00:00','V-18202020','Egresado'),
+('2016-09-01 00:00:00','2022-07-15 00:00:00','V-16303030','Egresado'),
+('2019-03-01 00:00:00',NULL,'V-12444444','PersonalAdministrativo');
 
 INSERT INTO Vehiculo (Placa, Modelo, Color, Tipo, Ano, CI) VALUES
 ('ABC-123','Toyota Corolla','Blanco','Carro',2020,'V-20111111'),
