@@ -36,17 +36,21 @@
     logout:     `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
   };
 
+  // Un aliado externo (rol 'aliado_externo') no tiene ficha de Miembro ni
+  // participa en el resto de los modulos institucionales — solo le
+  // corresponde publicar/gestionar sus propias ofertas laborales y ver
+  // voluntariado. Todo lo demas se le excluye explicitamente.
   const NAV_ITEMS = [
-    { label: esAdmin ? 'Usuarios' : 'Mi Perfil', icon: 'user', path: esAdmin ? '../miembros/lista.html' : '../miembros/miembros.html', roles: [] },
+    { label: esAdmin ? 'Usuarios' : 'Mi Perfil', icon: 'user', path: esAdmin ? '../miembros/lista.html' : '../miembros/miembros.html', roles: [], excludeRoles: ['aliado_externo'] },
     { label: 'Vinculaciones',    icon: 'link',      path: '../vinculaciones/vinculaciones.html',     roles: ['admin','director'] },
     { label: 'Beneficiarios',    icon: 'users',     path: '../beneficiarios/beneficiarios.html',     roles: [], subtipos: ['Profesor', 'PersonalAdministrativo'] },
     { label: 'Infraestructura',  icon: 'building',  path: '../infraestructura/infraestructura.html', roles: ['admin','director'] },
-    { label: 'Servicios',        icon: 'briefcase', path: '../servicios/servicios.html',             roles: [] },
-    { label: 'Solicitudes',      icon: 'file',      path: '../solicitudes/solicitudes.html',         roles: [] },
-    { label: 'Financiero',       icon: 'dollar',    path: '../financiero/financiero.html',           roles: [] },
+    { label: 'Servicios',        icon: 'briefcase', path: '../servicios/servicios.html',             roles: [], excludeRoles: ['aliado_externo'] },
+    { label: 'Solicitudes',      icon: 'file',      path: '../solicitudes/solicitudes.html',         roles: [], excludeRoles: ['aliado_externo'] },
+    { label: 'Financiero',       icon: 'dollar',    path: '../financiero/financiero.html',           roles: [], excludeRoles: ['aliado_externo'] },
     { label: 'Bolsa de Trabajo', icon: 'search',    path: '../bolsatrabajo/bolsatrabajo.html',       roles: [] },
-    { label: 'Vehículos',        icon: 'car',       path: '../vehiculos/vehiculos.html',             roles: [] },
-    { label: 'Estacionamiento',  icon: 'parking',   path: '../estacionamiento/estacionamiento.html', roles: [] },
+    { label: 'Vehículos',        icon: 'car',       path: '../vehiculos/vehiculos.html',             roles: [], excludeRoles: ['aliado_externo'] },
+    { label: 'Estacionamiento',  icon: 'parking',   path: '../estacionamiento/estacionamiento.html', roles: [], excludeRoles: ['aliado_externo'] },
     { label: 'Voluntariado',     icon: 'heart',     path: '../voluntariado/voluntariado.html',       roles: [] },
     { label: 'Reportes',         icon: 'chart',     path: '../reportes/reportes.html',               roles: ['admin','director'] },
   ];
@@ -60,7 +64,8 @@
     return NAV_ITEMS.filter(item => {
       const rolPermitido = item.roles.length === 0 || item.roles.includes(usuario.rol);
       const subtipoPermitido = !item.subtipos || item.subtipos.length === 0 || item.subtipos.includes(usuario.subtipo);
-      return rolPermitido && subtipoPermitido;
+      const noExcluido = !item.excludeRoles || !item.excludeRoles.includes(usuario.rol);
+      return rolPermitido && subtipoPermitido && noExcluido;
     });
   }
 

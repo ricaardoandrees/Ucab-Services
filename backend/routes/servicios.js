@@ -78,7 +78,63 @@ router.post('/', auth, autorizar('admin', 'director'), async (req, res) => {
     res.status(201).json({ mensaje: 'Servicio creado exitosamente', servicio: result.rows[0] });
   } catch (err) {
     console.error('Error POST /servicios:', err);
-    res.status(500).json({ error: 'Error al crear el servicio' });
+    res.status(400).json({ error: err.message || 'Error al crear el servicio' });
+  }
+});
+
+/* ----------------------------------------------------------
+   Editar / Eliminar un Servicio existente (Admin y Director)
+   PUT    /api/servicios/:nombre/:numero
+   Body: { requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede, espacio }
+   DELETE /api/servicios/:nombre/:numero
+   No se puede eliminar un servicio con solicitudes/reservas
+   asociadas (FK sin cascada, a proposito: preserva el historial).
+---------------------------------------------------------- */
+router.put('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req, res) => {
+  const { nombre, numero } = req.params;
+  const { requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede, espacio } = req.body;
+
+  try {
+    const query = `
+      UPDATE Servicio
+      SET requisitos = $1, descripcion = $2, precio_base = $3, nombre_categoria = $4,
+          ID_EP = $5, nombre_sede = $6, numero_espacio = $7, nombre_edif = $8,
+          direccion_exacta = $9, nombre_sede_espacio = $10
+      WHERE nombre = $11 AND numero_servicio = $12
+      RETURNING *
+    `;
+    const result = await pool.query(query, [
+      requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede,
+      espacio ? espacio.numero : null,
+      espacio ? espacio.edificio : null,
+      espacio ? espacio.direccion : null,
+      espacio ? espacio.sede : null,
+      nombre, numero
+    ]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Servicio no encontrado' });
+    res.json({ mensaje: 'Servicio actualizado exitosamente', servicio: result.rows[0] });
+  } catch (err) {
+    console.error('Error PUT /servicios/:nombre/:numero:', err);
+    res.status(400).json({ error: err.message || 'Error al actualizar el servicio' });
+  }
+});
+
+router.delete('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req, res) => {
+  const { nombre, numero } = req.params;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM Servicio WHERE nombre = $1 AND numero_servicio = $2 RETURNING *`,
+      [nombre, numero]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Servicio no encontrado' });
+    res.json({ mensaje: 'Servicio eliminado exitosamente' });
+  } catch (err) {
+    if (err.code === '23503') {
+      return res.status(409).json({ error: 'No se puede eliminar: este servicio ya tiene solicitudes, reservas o publicaciones asociadas.' });
+    }
+    console.error('Error DELETE /servicios/:nombre/:numero:', err);
+    res.status(500).json({ error: 'Error al eliminar el servicio' });
   }
 });
 

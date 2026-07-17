@@ -141,6 +141,21 @@ INSERT INTO Sede (nombre, ubicacion) VALUES
 INSERT INTO CategoriaServicio (Nombre) VALUES
 ('Salud'),('Educacion Continua'),('Cultura'),('Deporte'),('Estacionamiento');
 
+-- Ajusta debe existir ANTES de Servicio y de Historial_Tarifas: tanto
+-- fn_validar_limites_servicio como fn_validar_limites_tarifa (RN-23) exigen
+-- un ajuste de categoria+sede para poder validar cada precio.
+INSERT INTO Ajusta (nombre_categoria, nombre_sede, aumento, maximo_limite, minimo_limite) VALUES
+('Salud','Montalban',0.00,200.00,20.00),
+('Salud','Guayana',-10.00,150.00,15.00),
+('Educacion Continua','Montalban',5.00,500.00,50.00),
+('Educacion Continua','Guayana',0.00,400.00,40.00),
+('Cultura','Montalban',0.00,300.00,30.00),
+('Cultura','Guayana',-5.00,250.00,25.00),
+('Deporte','Montalban',0.00,60.00,5.00),
+('Deporte','Guayana',-5.00,50.00,5.00),
+('Estacionamiento','Montalban',0.00,20.00,2.00),
+('Estacionamiento','Guayana',0.00,15.00,2.00);
+
 INSERT INTO Servicio (nombre, numero_servicio, requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede) VALUES
 ('Consulta Medica General',1,'Carnet estudiantil vigente','Consulta con medico general en el centro de salud universitario',25.00,'Salud',4,'Montalban'),
 ('Examen de Laboratorio',1,'Orden medica','Toma de muestras y examenes de laboratorio clinico',15.00,'Salud',4,'Guayana'),
@@ -185,20 +200,6 @@ INSERT INTO PlantillaPaso (nombre_servicio, numero_servicio, numero_paso, descri
 ('Clases de Natacion',1,2,'Finalizacion del ciclo de clases','Oficina'),
 ('Reserva de Puesto de Estacionamiento',1,1,'Verificacion de vehiculo registrado','Secretaria'),
 ('Reserva de Puesto de Estacionamiento',1,2,'Confirmacion de asignacion de puesto','Oficina');
-
--- Ajusta debe existir ANTES de Historial_Tarifas: fn_validar_limites_tarifa
--- (RN-23) exige un ajuste de categoria+sede para poder validar cada tarifa.
-INSERT INTO Ajusta (nombre_categoria, nombre_sede, aumento, maximo_limite, minimo_limite) VALUES
-('Salud','Montalban',0.00,200.00,20.00),
-('Salud','Guayana',-10.00,150.00,15.00),
-('Educacion Continua','Montalban',5.00,500.00,50.00),
-('Educacion Continua','Guayana',0.00,400.00,40.00),
-('Cultura','Montalban',0.00,300.00,30.00),
-('Cultura','Guayana',-5.00,250.00,25.00),
-('Deporte','Montalban',0.00,60.00,5.00),
-('Deporte','Guayana',-5.00,50.00,5.00),
-('Estacionamiento','Montalban',0.00,20.00,2.00),
-('Estacionamiento','Guayana',0.00,15.00,2.00);
 
 INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_servicio, precio_final, perfil_solicitante) VALUES
 ('2026-01-01 00:00:00','Consulta Medica General',1,25.0,'Miembro Activo'),

@@ -63,6 +63,11 @@ function renderServicios(data) {
       </div>
       <button class="btn btn-primary w-full" onclick="solicitarServicio('${s.nombre}', ${s.numero_servicio})">Solicitar Trámite</button>
       ${esAdmin ? `<button class="btn btn-secondary w-full" style="margin-top:6px;" onclick="abrirModalSuplementos('${s.nombre.replace(/'/g, "\\'")}', ${s.numero_servicio})">🎁 Suplementos</button>` : ''}
+      ${esAdmin ? `
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <button class="btn btn-secondary" style="flex:1" onclick='abrirEditarServicio(${JSON.stringify(s).replace(/'/g, "&apos;")})'>✏️ Editar</button>
+          <button class="btn btn-secondary" style="flex:1; color:var(--danger, #D93025)" onclick="eliminarServicio('${s.nombre.replace(/'/g, "\\'")}', ${s.numero_servicio})">🗑️ Eliminar</button>
+        </div>` : ''}
     `;
     grid.appendChild(card);
   });
@@ -76,6 +81,51 @@ function solicitarServicio(nombre, numero) {
 // ==========================================
 // LÓGICA DEL MODAL Y FORMULARIO (ADMIN)
 // ==========================================
+// null = creando un servicio nuevo; {nombre, numero_servicio} = editando uno existente
+let servicioEditando = null;
+
+function abrirEditarServicio(s) {
+  servicioEditando = {
+    nombre: s.nombre,
+    numero_servicio: s.numero_servicio,
+    // El espacio fisico fijo (si tiene) no se reasigna desde este modal;
+    // se reenvia tal cual para que el PUT no lo borre por accidente.
+    espacioActual: s.numero_espacio
+      ? { numero: s.numero_espacio, edificio: s.nombre_edif, direccion: s.direccion_exacta, sede: s.nombre_sede_espacio }
+      : null
+  };
+
+  document.getElementById('s_nombre').value = s.nombre;
+  document.getElementById('s_nombre').readOnly = true;
+  document.getElementById('s_categoria').value = s.nombre_categoria;
+  document.getElementById('s_precio').value = s.precio_base;
+  document.getElementById('s_sede').value = s.nombre_sede;
+  document.getElementById('s_ep').value = s.ID_EP;
+  document.getElementById('s_requisitos').value = s.requisitos || '';
+  document.getElementById('s_descripcion').value = s.descripcion;
+
+  const tieneEspacio = !!s.numero_espacio;
+  document.getElementById('s_tiene_espacio').checked = tieneEspacio;
+  document.getElementById('s_tiene_espacio').disabled = true; // no se reasigna el espacio desde aqui
+  document.getElementById('s_espacio_container').style.display = 'none';
+
+  document.querySelector('#modal-servicio .modal__title').textContent = 'Editar Servicio';
+  document.querySelector('#modal-servicio .steps-configurator').style.display = 'none';
+  document.querySelector('#modal-servicio button[type="submit"]').textContent = 'Guardar Cambios';
+
+  document.getElementById('modal-servicio').classList.add('open');
+}
+
+async function eliminarServicio(nombre, numero) {
+  if (!confirm(`¿Eliminar el servicio "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  try {
+    await api.delete(`/servicios/${encodeURIComponent(nombre)}/${numero}`);
+    loadServicios();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 function setupEventListeners() {
   const modal = document.getElementById('modal-servicio');
   const btnNuevo = document.getElementById('btn-nuevo-servicio');
@@ -83,10 +133,21 @@ function setupEventListeners() {
   const btnAddStep = document.getElementById('btn-add-step');
   const form = document.getElementById('form-servicio');
 
-  if(btnNuevo) {
-    btnNuevo.addEventListener('click', () => modal.classList.add('open'));
+  function resetModalACrear() {
+    servicioEditando = null;
+    form.reset();
+    document.getElementById('s_nombre').readOnly = false;
+    document.getElementById('s_tiene_espacio').disabled = false;
+    document.getElementById('s_espacio_container').style.display = 'none';
+    document.querySelector('#modal-servicio .modal__title').textContent = 'Publicar Nuevo Servicio';
+    document.querySelector('#modal-servicio .steps-configurator').style.display = 'block';
+    document.querySelector('#modal-servicio button[type="submit"]').textContent = 'Crear Servicio';
   }
-  btnClose.addEventListener('click', () => modal.classList.remove('open'));
+
+  if(btnNuevo) {
+    btnNuevo.addEventListener('click', () => { resetModalACrear(); modal.classList.add('open'); });
+  }
+  btnClose.addEventListener('click', () => { modal.classList.remove('open'); resetModalACrear(); });
 
   // Espacio físico asociado (opcional)
   const chkTieneEspacio = document.getElementById('s_tiene_espacio');
@@ -150,45 +211,59 @@ function setupEventListeners() {
       descripcion: document.getElementById('s_descripcion').value
     };
 
-    const tieneEspacio = document.getElementById('s_tiene_espacio').checked;
-    const espacioValue = document.getElementById('s_espacio').value;
-    if (tieneEspacio && !espacioValue) {
-      return alert('Selecciona el espacio físico correspondiente a este servicio.');
-    }
-    const espacio = tieneEspacio ? JSON.parse(espacioValue) : null;
-
     try {
-      // 1. Crear el servicio
-      const resServicio = await api.post('/servicios', {
-        nombre: data.nombre,
-        requisitos: data.requisitos,
-        descripcion: data.descripcion,
-        precio_base: data.precio_base,
-        nombre_categoria: data.categoria,
-        ID_EP: data.ep,
-        nombre_sede: data.sede,
-        espacio
-      });
-      
-      const nuevoNumero = resServicio.servicio.numero_servicio;
-
-      // 2. Crear las plantillas (pasos)
-      const rows = document.querySelectorAll('.step-row');
-      for (let i = 0; i < rows.length; i++) {
-        const desc = rows[i].querySelector('.step-desc').value;
-        const unidad = rows[i].querySelector('.step-unidad').value;
-
-        await api.post(`/servicios/${encodeURIComponent(data.nombre)}/${nuevoNumero}/plantillas`, {
-          numero_paso: i + 1,
-          descripcion: desc,
-          unidad_responsable: unidad
+      if (servicioEditando) {
+        // Editar: el espacio fijo (si tiene) se reenvia tal cual, no se toca aqui.
+        await api.put(`/servicios/${encodeURIComponent(servicioEditando.nombre)}/${servicioEditando.numero_servicio}`, {
+          requisitos: data.requisitos,
+          descripcion: data.descripcion,
+          precio_base: data.precio_base,
+          nombre_categoria: data.categoria,
+          ID_EP: data.ep,
+          nombre_sede: data.sede,
+          espacio: servicioEditando.espacioActual
         });
+        alert('Servicio actualizado exitosamente');
+      } else {
+        const tieneEspacio = document.getElementById('s_tiene_espacio').checked;
+        const espacioValue = document.getElementById('s_espacio').value;
+        if (tieneEspacio && !espacioValue) {
+          return alert('Selecciona el espacio físico correspondiente a este servicio.');
+        }
+        const espacio = tieneEspacio ? JSON.parse(espacioValue) : null;
+
+        // 1. Crear el servicio
+        const resServicio = await api.post('/servicios', {
+          nombre: data.nombre,
+          requisitos: data.requisitos,
+          descripcion: data.descripcion,
+          precio_base: data.precio_base,
+          nombre_categoria: data.categoria,
+          ID_EP: data.ep,
+          nombre_sede: data.sede,
+          espacio
+        });
+
+        const nuevoNumero = resServicio.servicio.numero_servicio;
+
+        // 2. Crear las plantillas (pasos)
+        const rows = document.querySelectorAll('.step-row');
+        for (let i = 0; i < rows.length; i++) {
+          const desc = rows[i].querySelector('.step-desc').value;
+          const unidad = rows[i].querySelector('.step-unidad').value;
+
+          await api.post(`/servicios/${encodeURIComponent(data.nombre)}/${nuevoNumero}/plantillas`, {
+            numero_paso: i + 1,
+            descripcion: desc,
+            unidad_responsable: unidad
+          });
+        }
+
+        alert('Servicio y Pasos creados exitosamente');
       }
 
-      alert('Servicio y Pasos creados exitosamente');
       modal.classList.remove('open');
-      form.reset();
-      espacioContainer.style.display = 'none';
+      resetModalACrear();
       loadServicios(); // Recargar catálogo
 
     } catch (err) {

@@ -337,6 +337,41 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_validar_limites_tarifa();
 
 -- ------------------------------------------------------------
+-- RN-23 (extendida): el precio_base de un Servicio tampoco puede
+-- superar los limites (minimo_limite, maximo_limite) que Ajusta
+-- define para su propia categoria y sede. Evita crear/editar un
+-- servicio con un precio de referencia disparatado desde el arranque,
+-- antes incluso de que exista una tarifa en Historial_Tarifas.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_validar_limites_servicio()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_min NUMERIC(10,2);
+    v_max NUMERIC(10,2);
+BEGIN
+    SELECT minimo_limite, maximo_limite INTO v_min, v_max
+    FROM Ajusta
+    WHERE nombre_categoria = NEW.nombre_categoria AND nombre_sede = NEW.nombre_sede;
+
+    IF v_min IS NULL THEN
+        RAISE EXCEPTION 'RN-23: no existe un ajuste definido para la categoria % en la sede %', NEW.nombre_categoria, NEW.nombre_sede;
+    END IF;
+
+    IF NEW.precio_base < v_min OR NEW.precio_base > v_max THEN
+        RAISE EXCEPTION 'RN-23: el precio_base % esta fuera del rango permitido (% - %) para % en %',
+            NEW.precio_base, v_min, v_max, NEW.nombre_categoria, NEW.nombre_sede;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validar_limites_servicio
+BEFORE INSERT OR UPDATE OF precio_base, nombre_categoria, nombre_sede ON Servicio
+FOR EACH ROW
+EXECUTE FUNCTION fn_validar_limites_servicio();
+
+-- ------------------------------------------------------------
 -- RN-28: una EntidadExterna con fecha_vencimiento pasada no
 -- puede publicar nuevos servicios (no aplica a EntidadInterna)
 -- ------------------------------------------------------------
