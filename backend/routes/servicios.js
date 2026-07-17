@@ -3,6 +3,16 @@ const pool        = require('../db');
 const auth        = require('../middleware/auth');
 const autorizar   = require('../middleware/roles');
 
+// El catalogo de Servicios lo gestionan Secretaria y Oficina; Caja y
+// Seguridad son admin/director tambien pero solo deben ver el catalogo.
+async function esSecretariaUOficina(CI) {
+  const r = await pool.query(
+    `SELECT 1 FROM PersonalAdministrativo WHERE CI = $1 AND adscripcion_presupuestaria = ANY($2::varchar[])`,
+    [CI, ['Secretaria', 'Oficina']]
+  );
+  return r.rows.length > 0;
+}
+
 /* ----------------------------------------------------------
    Catálogo de Servicios
    GET /api/servicios
@@ -58,17 +68,28 @@ router.get('/reservas/disponibilidad', auth, async (req, res) => {
    espacio (opcional): { numero, edificio, direccion, sede } — solo para servicios de alquiler de espacio
 ---------------------------------------------------------- */
 router.post('/', auth, autorizar('admin', 'director'), async (req, res) => {
+  if (!(await esSecretariaUOficina(req.usuario.CI))) {
+    return res.status(403).json({ error: 'Solo personal de Secretaría u Oficina puede publicar servicios' });
+  }
+
   const { nombre, requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede, espacio } = req.body;
 
+  // BEGIN/COMMIT/ROLLBACK en un client dedicado: si las tarifas derivadas
+  // (80%/90% del precio_base) caen fuera del rango de Ajusta y RN-23 las
+  // rechaza, el ROLLBACK debe deshacer tambien el INSERT en Servicio, o
+  // queda un servicio sin ninguna tarifa (imposible de cobrar).
+  const client = await pool.connect();
   try {
-    const numRes = await pool.query(`SELECT COALESCE(MAX(numero_servicio), 0) + 1 AS next_num FROM Servicio WHERE nombre = $1`, [nombre]);
+    await client.query('BEGIN');
+
+    const numRes = await client.query(`SELECT COALESCE(MAX(numero_servicio), 0) + 1 AS next_num FROM Servicio WHERE nombre = $1`, [nombre]);
     const numero_servicio = numRes.rows[0].next_num;
 
     const query = `
       INSERT INTO Servicio (nombre, numero_servicio, requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *
     `;
-    const result = await pool.query(query, [
+    const result = await client.query(query, [
       nombre, numero_servicio, requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede,
       espacio ? espacio.numero : null,
       espacio ? espacio.edificio : null,
@@ -83,17 +104,21 @@ router.post('/', auth, autorizar('admin', 'director'), async (req, res) => {
 
     const queryTarifas = `
       INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_servicio, precio_final, perfil_solicitante)
-      VALUES 
+      VALUES
         ($1, $2, $3, $4, 'Publico Externo'),
         ($1, $2, $3, $5, 'Egresado'),
         ($1, $2, $3, $6, 'Miembro Activo')
     `;
-    await pool.query(queryTarifas, [fechaHora, nombre, numero_servicio, precioBaseNum, precioEgresado, precioMiembro]);
+    await client.query(queryTarifas, [fechaHora, nombre, numero_servicio, precioBaseNum, precioEgresado, precioMiembro]);
 
+    await client.query('COMMIT');
     res.status(201).json({ mensaje: 'Servicio creado exitosamente', servicio: result.rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error POST /servicios:', err);
     res.status(400).json({ error: err.message || 'Error al crear el servicio' });
+  } finally {
+    client.release();
   }
 });
 
@@ -106,10 +131,20 @@ router.post('/', auth, autorizar('admin', 'director'), async (req, res) => {
    asociadas (FK sin cascada, a proposito: preserva el historial).
 ---------------------------------------------------------- */
 router.put('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req, res) => {
+  if (!(await esSecretariaUOficina(req.usuario.CI))) {
+    return res.status(403).json({ error: 'Solo personal de Secretaría u Oficina puede editar servicios' });
+  }
+
   const { nombre, numero } = req.params;
   const { requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede, espacio } = req.body;
 
+  // Misma razon que en POST: si la tarifa derivada viola RN-23, hay que
+  // revertir tambien el UPDATE del Servicio, no dejarlo con el precio nuevo
+  // pero sin la tarifa correspondiente.
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
+
     const query = `
       UPDATE Servicio
       SET requisitos = $1, descripcion = $2, precio_base = $3, nombre_categoria = $4,
@@ -118,7 +153,7 @@ router.put('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req,
       WHERE nombre = $11 AND numero_servicio = $12
       RETURNING *
     `;
-    const result = await pool.query(query, [
+    const result = await client.query(query, [
       requisitos, descripcion, precio_base, nombre_categoria, ID_EP, nombre_sede,
       espacio ? espacio.numero : null,
       espacio ? espacio.edificio : null,
@@ -126,7 +161,10 @@ router.put('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req,
       espacio ? espacio.sede : null,
       nombre, numero
     ]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Servicio no encontrado' });
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Servicio no encontrado' });
+    }
 
     const fechaHora = new Date();
     const precioBaseNum = parseFloat(precio_base);
@@ -135,21 +173,29 @@ router.put('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req,
 
     const queryTarifas = `
       INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_servicio, precio_final, perfil_solicitante)
-      VALUES 
+      VALUES
         ($1, $2, $3, $4, 'Publico Externo'),
         ($1, $2, $3, $5, 'Egresado'),
         ($1, $2, $3, $6, 'Miembro Activo')
     `;
-    await pool.query(queryTarifas, [fechaHora, nombre, numero, precioBaseNum, precioEgresado, precioMiembro]);
+    await client.query(queryTarifas, [fechaHora, nombre, numero, precioBaseNum, precioEgresado, precioMiembro]);
 
+    await client.query('COMMIT');
     res.json({ mensaje: 'Servicio actualizado exitosamente', servicio: result.rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error PUT /servicios/:nombre/:numero:', err);
     res.status(400).json({ error: err.message || 'Error al actualizar el servicio' });
+  } finally {
+    client.release();
   }
 });
 
 router.delete('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req, res) => {
+  if (!(await esSecretariaUOficina(req.usuario.CI))) {
+    return res.status(403).json({ error: 'Solo personal de Secretaría u Oficina puede eliminar servicios' });
+  }
+
   const { nombre, numero } = req.params;
 
   try {

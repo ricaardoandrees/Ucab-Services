@@ -123,7 +123,7 @@ router.get('/', auth, async (req, res) => {
     res.json({ ofertas: ofertasConMatch });
   } catch (err) {
     console.error('Error GET /bolsatrabajo:', err);
-    res.status(500).json({ error: 'Error al consultar la bolsa de trabajo', detalle: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Error al consultar la bolsa de trabajo' });
   }
 });
 

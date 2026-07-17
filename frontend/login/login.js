@@ -121,7 +121,12 @@ form.addEventListener('submit', async (e) => {
 function iniciarSesion(data) {
   localStorage.setItem('token',   data.token);
   localStorage.setItem('usuario', JSON.stringify(data.usuario));
-  window.location.href = '../miembros/miembros.html';
+  // Un aliado externo no tiene ficha de Miembro; lo mandamos directo a la
+  // Bolsa de Trabajo, que es lo unico que usa (publicar/ver ofertas).
+  const destino = data.usuario.rol === 'aliado_externo'
+    ? '../bolsatrabajo/bolsatrabajo.html'
+    : '../miembros/miembros.html';
+  window.location.href = destino;
 }
 
 

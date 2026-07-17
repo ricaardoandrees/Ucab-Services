@@ -11,27 +11,28 @@ require('dotenv').config();
  */
 async function detectarSubtipo(CI) {
   const tablas = [
-    { tabla: 'Becario',                subtipo: 'Becario',                campoExtra: null    },
-    { tabla: 'Preparador',             subtipo: 'Preparador',             campoExtra: null    },
-    { tabla: 'Estudiante',             subtipo: 'Estudiante',             campoExtra: null    },
-    { tabla: 'Profesor',               subtipo: 'Profesor',               campoExtra: null    },
-    { tabla: 'PersonalAdministrativo', subtipo: 'PersonalAdministrativo', campoExtra: 'cargo' },
-    { tabla: 'Egresado',               subtipo: 'Egresado',               campoExtra: null    },
+    { tabla: 'Becario',                subtipo: 'Becario'                },
+    { tabla: 'Preparador',             subtipo: 'Preparador'             },
+    { tabla: 'Estudiante',             subtipo: 'Estudiante'             },
+    { tabla: 'Profesor',               subtipo: 'Profesor'               },
+    { tabla: 'PersonalAdministrativo', subtipo: 'PersonalAdministrativo' },
+    { tabla: 'Egresado',               subtipo: 'Egresado'               },
   ];
 
-  for (const { tabla, subtipo, campoExtra } of tablas) {
-    const campo = campoExtra ? campoExtra : '1';
-    const q = await pool.query(
-      `SELECT ${campo} FROM ${tabla} WHERE CI = $1`, [CI]
-    );
-    if (q.rows.length > 0) {
-      return {
-        subtipo,
-        cargo: campoExtra ? q.rows[0][campoExtra] : null
-      };
+  for (const { tabla, subtipo } of tablas) {
+    if (tabla === 'PersonalAdministrativo') {
+      const q = await pool.query(
+        `SELECT cargo, adscripcion_presupuestaria FROM PersonalAdministrativo WHERE CI = $1`, [CI]
+      );
+      if (q.rows.length > 0) {
+        return { subtipo, cargo: q.rows[0].cargo, adscripcion: q.rows[0].adscripcion_presupuestaria };
+      }
+      continue;
     }
+    const q = await pool.query(`SELECT 1 FROM ${tabla} WHERE CI = $1`, [CI]);
+    if (q.rows.length > 0) return { subtipo, cargo: null, adscripcion: null };
   }
-  return { subtipo: 'Miembro', cargo: null };
+  return { subtipo: 'Miembro', cargo: null, adscripcion: null };
 }
 
 router.post('/login', async (req, res) => {
@@ -103,7 +104,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
     }
 
-    const { subtipo, cargo } = await detectarSubtipo(miembro.ci);
+    const { subtipo, cargo, adscripcion } = await detectarSubtipo(miembro.ci);
 
     let rol = 'miembro';
     if (subtipo === 'PersonalAdministrativo') {
@@ -112,7 +113,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { CI: miembro.ci, rol, subtipo, cargo, estado: miembro.estado_de_cuenta },
+      { CI: miembro.ci, rol, subtipo, cargo, adscripcion, estado: miembro.estado_de_cuenta },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
@@ -126,6 +127,7 @@ router.post('/login', async (req, res) => {
         rol,
         subtipo,
         cargo,
+        adscripcion,
         estado:  miembro.estado_de_cuenta
       }
     });

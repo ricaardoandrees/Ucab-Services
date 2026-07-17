@@ -20,7 +20,9 @@ function checkAuthAndRoles() {
     const payload = JSON.parse(atob(token.split('.')[1]));
     userSubtipo = payload.subtipo;
     
-    if (payload.rol === 'admin' || payload.rol === 'director') {
+    const esAdminODirector = payload.rol === 'admin' || payload.rol === 'director';
+    const esUnidadGestora = payload.adscripcion === 'Secretaria' || payload.adscripcion === 'Oficina';
+    if (esAdminODirector && esUnidadGestora) {
       esAdmin = true;
       const btn = document.getElementById('btn-nuevo-servicio');
       if (btn) btn.style.display = 'inline-flex';
