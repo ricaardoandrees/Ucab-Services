@@ -64,6 +64,20 @@
             <span class="field__error" id="error-contrasena"></span>
           </div>
 
+          <div class="field" id="campo-mfa" style="display: none;">
+            <label class="field__label" for="codigo-mfa">Código MFA</label>
+            <input
+              class="field__input"
+              type="text"
+              id="codigo-mfa"
+              name="codigo-mfa"
+              placeholder="1234"
+              autocomplete="one-time-code"
+            />
+            <span class="field__error" id="error-mfa"></span>
+            <p style="font-size: 11px; color: var(--muted); margin-top: 4px;">Modo simulación: Ingresa 1234</p>
+          </div>
+
           <!-- Mensaje de error general del servidor -->
           <div class="alert alert--error" id="alert-general" role="alert" aria-live="polite"></div>
 

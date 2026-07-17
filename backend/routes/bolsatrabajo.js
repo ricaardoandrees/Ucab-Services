@@ -63,10 +63,67 @@ router.get('/', auth, async (req, res) => {
     q += ` ORDER BY o.Fecha_Oferta DESC`;
 
     const { rows } = await pool.query(q, params);
-    res.json({ ofertas: rows });
+
+    // --- ALGORITMO DE MATCH ---
+    let userRolStr = '';
+    let userKeywords = [];
+    if (CI && !rif) {
+      userRolStr = (req.usuario.subtipo || '').toLowerCase();
+      userKeywords.push(userRolStr);
+
+      if (['estudiante', 'becario', 'preparador'].includes(userRolStr)) {
+        const estQuery = await pool.query('SELECT "escuela" FROM Estudiante WHERE CI = $1', [CI]);
+        if (estQuery.rows.length > 0) {
+          userKeywords.push(estQuery.rows[0].escuela.toLowerCase());
+          userKeywords.push('estudiante'); // también es estudiante
+        }
+      } else if (userRolStr === 'egresado') {
+        const egrQuery = await pool.query('SELECT titulo FROM Egresado WHERE CI = $1', [CI]);
+        if (egrQuery.rows.length > 0) userKeywords.push(egrQuery.rows[0].titulo.toLowerCase());
+      }
+    }
+
+    // Calcular score para cada oferta
+    const ofertasConMatch = rows.map(o => {
+      let score = 0;
+      if (CI && !rif) {
+        const perfilTarget = (o.perfil_buscado || '').toLowerCase();
+        const cargoTarget = (o.cargo || '').toLowerCase();
+        
+        // Match base (10%) para ofertas disponibles si el usuario busca trabajo
+        score += 10;
+        
+        // 1. Match por Rol (30%)
+        if (userRolStr && perfilTarget.includes(userRolStr)) {
+          score += 30;
+        }
+
+        // 2. Match por Carrera/Titulo (60%)
+        // Validamos todas las palabras clave extras (escuela, titulo)
+        const hasKeywordMatch = userKeywords.some(kw => {
+          if (kw === userRolStr) return false; // ya evaluado
+          return perfilTarget.includes(kw) || cargoTarget.includes(kw) || kw.includes(cargoTarget) || kw.includes(perfilTarget);
+        });
+
+        if (hasKeywordMatch) {
+          score += 60;
+        }
+      }
+      return { ...o, match_porcentaje: Math.min(score, 100) };
+    });
+
+    // Ordenar: primero por match (descendente), luego por fecha (descendente)
+    ofertasConMatch.sort((a, b) => {
+      if (b.match_porcentaje !== a.match_porcentaje) {
+        return b.match_porcentaje - a.match_porcentaje;
+      }
+      return new Date(b.Fecha_Oferta) - new Date(a.Fecha_Oferta);
+    });
+
+    res.json({ ofertas: ofertasConMatch });
   } catch (err) {
     console.error('Error GET /bolsatrabajo:', err);
-    res.status(500).json({ error: 'Error al consultar la bolsa de trabajo' });
+    res.status(500).json({ error: 'Error al consultar la bolsa de trabajo', detalle: err.message, stack: err.stack });
   }
 });
 

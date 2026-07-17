@@ -5,6 +5,7 @@ let servicios = [];
 let userRoles = [];
 let token = localStorage.getItem('token'); // Simulando que el JWT se guarda en localStorage
 let esAdmin = false;
+let userSubtipo = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthAndRoles();
@@ -17,6 +18,8 @@ function checkAuthAndRoles() {
   if (!token) return;
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
+    userSubtipo = payload.subtipo;
+    
     if (payload.rol === 'admin' || payload.rol === 'director') {
       esAdmin = true;
       const btn = document.getElementById('btn-nuevo-servicio');
@@ -48,12 +51,24 @@ function renderServicios(data) {
   }
 
   data.forEach(s => {
+    // Calculamos el precio según el rol del usuario conectado
+    let precioFinal = parseFloat(s.precio_base);
+    let etiquetaDescuento = '';
+    
+    if (userSubtipo === 'Egresado') {
+      precioFinal = precioFinal * 0.90;
+      etiquetaDescuento = '<span style="font-size: 0.75rem; color: var(--primary); margin-left: 8px;">(10% desc. Egresado)</span>';
+    } else if (userSubtipo) { // Cualquier otro rol activo (Estudiante, Profesor, Personal)
+      precioFinal = precioFinal * 0.80;
+      etiquetaDescuento = '<span style="font-size: 0.75rem; color: var(--primary); margin-left: 8px;">(20% desc. Miembro)</span>';
+    }
+
     const card = document.createElement('div');
     card.className = 'service-card';
     card.innerHTML = `
       <div class="service-card__header">
         <span class="service-card__badge">${s.nombre_categoria}</span>
-        <span class="service-card__price">$${s.precio_base}</span>
+        <span class="service-card__price">$${precioFinal.toFixed(2)} ${etiquetaDescuento}</span>
       </div>
       <h3 class="service-card__title">${s.nombre}</h3>
       <p class="service-card__desc">${s.descripcion}</p>

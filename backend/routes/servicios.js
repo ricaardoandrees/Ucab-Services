@@ -75,6 +75,21 @@ router.post('/', auth, autorizar('admin', 'director'), async (req, res) => {
       espacio ? espacio.direccion : null,
       espacio ? espacio.sede : null
     ]);
+
+    const fechaHora = new Date();
+    const precioBaseNum = parseFloat(precio_base);
+    const precioEgresado = precioBaseNum * 0.90;
+    const precioMiembro = precioBaseNum * 0.80;
+
+    const queryTarifas = `
+      INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_servicio, precio_final, perfil_solicitante)
+      VALUES 
+        ($1, $2, $3, $4, 'Publico Externo'),
+        ($1, $2, $3, $5, 'Egresado'),
+        ($1, $2, $3, $6, 'Miembro Activo')
+    `;
+    await pool.query(queryTarifas, [fechaHora, nombre, numero_servicio, precioBaseNum, precioEgresado, precioMiembro]);
+
     res.status(201).json({ mensaje: 'Servicio creado exitosamente', servicio: result.rows[0] });
   } catch (err) {
     console.error('Error POST /servicios:', err);
@@ -112,6 +127,21 @@ router.put('/:nombre/:numero', auth, autorizar('admin', 'director'), async (req,
       nombre, numero
     ]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Servicio no encontrado' });
+
+    const fechaHora = new Date();
+    const precioBaseNum = parseFloat(precio_base);
+    const precioEgresado = precioBaseNum * 0.90;
+    const precioMiembro = precioBaseNum * 0.80;
+
+    const queryTarifas = `
+      INSERT INTO Historial_Tarifas (fecha_hora_vigencia, nombre_servicio, numero_servicio, precio_final, perfil_solicitante)
+      VALUES 
+        ($1, $2, $3, $4, 'Publico Externo'),
+        ($1, $2, $3, $5, 'Egresado'),
+        ($1, $2, $3, $6, 'Miembro Activo')
+    `;
+    await pool.query(queryTarifas, [fechaHora, nombre, numero, precioBaseNum, precioEgresado, precioMiembro]);
+
     res.json({ mensaje: 'Servicio actualizado exitosamente', servicio: result.rows[0] });
   } catch (err) {
     console.error('Error PUT /servicios/:nombre/:numero:', err);
@@ -747,6 +777,22 @@ router.patch('/pasos', auth, autorizar('admin', 'director'), async (req, res) =>
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Paso no encontrado' });
+    }
+
+    // Verificar si todos los pasos de esta solicitud están completados
+    const checkPasos = await pool.query(`
+      SELECT COUNT(*) as pendientes 
+      FROM Paso_Actividad 
+      WHERE fecha_hora_creacion_solicitud = $1 AND estado = 'Pendiente'
+    `, [fecha_hora_creacion_solicitud]);
+
+    if (parseInt(checkPasos.rows[0].pendientes) === 0) {
+      // Todos los pasos están completados, actualizamos la Solicitud
+      await pool.query(`
+        UPDATE Solicitud 
+        SET estado = 'Completada' 
+        WHERE fecha_hora_creacion = $1
+      `, [fecha_hora_creacion_solicitud]);
     }
 
     res.json({ mensaje: 'Paso completado', paso: result.rows[0] });

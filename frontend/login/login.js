@@ -16,6 +16,22 @@ const alertGeneral  = document.getElementById('alert-general');
 const btnSubmit     = document.getElementById('btn-submit');
 const togglePass    = document.getElementById('toggle-pass');
 
+const campoMfa      = document.getElementById('campo-mfa');
+const inputMfa      = document.getElementById('codigo-mfa');
+const errorMfa      = document.getElementById('error-mfa');
+inputMfa?.addEventListener('input', () => limpiarError(inputMfa, errorMfa));
+
+// Detectar si el correo tiene MFA activado y mostrar el campo dinámicamente
+inputCorreo.addEventListener('input', () => {
+  limpiarError(inputCorreo, errorCorreo);
+  const correoActual = inputCorreo.value.trim();
+  if (localStorage.getItem(`mfa_${correoActual}`) === 'true') {
+    campoMfa.style.display = 'block';
+  } else {
+    campoMfa.style.display = 'none';
+  }
+});
+
 document.querySelector('.link-forgot').addEventListener('click', (e) => {
   e.preventDefault();
   alert('Contacta al administrador para restablecer tu contraseña.');
@@ -61,6 +77,16 @@ form.addEventListener('submit', async (e) => {
 
   if (!validar()) return;
 
+  const correoActual = inputCorreo.value.trim();
+  const mfaRequerido = localStorage.getItem(`mfa_${correoActual}`) === 'true';
+
+  if (mfaRequerido) {
+    if (inputMfa.value.trim() !== '1234') {
+      mostrarError(inputMfa, errorMfa, 'Código incorrecto. Ingresa 1234.');
+      return;
+    }
+  }
+
   // Captura de valores — listos para enviar al backend
   const correo    = inputCorreo.value.trim();
   const contrasena = inputPass.value;
@@ -73,34 +99,30 @@ form.addEventListener('submit', async (e) => {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ correo, contrasena })
-      // PENDIENTE DE CONFIRMACIONNN la opción de contraseña,
-      // este objeto ya está listo 
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      // El backend devuelve { error: 'mensaje' }
       mostrarAlertaGeneral(data.error || 'Error al iniciar sesión.');
       return;
     }
 
-    // ── Login exitoso ──────────────────────────────────────────
-    // Guardar el JWT en localStorage para usarlo en las demás rutas
-    localStorage.setItem('token',   data.token);
-    localStorage.setItem('usuario', JSON.stringify(data.usuario));
-
-    // Redirigir al dashboard
-    window.location.href = '../miembros/miembros.html'; // ajusta la ruta si es necesario
+    iniciarSesion(data);
 
   } catch (err) {
-    // Error de red (servidor caído, sin conexión, etc.)
     mostrarAlertaGeneral('No se pudo conectar con el servidor. Intenta de nuevo.');
     console.error('Error de red en login:', err);
   } finally {
     setLoading(false);
   }
 });
+
+function iniciarSesion(data) {
+  localStorage.setItem('token',   data.token);
+  localStorage.setItem('usuario', JSON.stringify(data.usuario));
+  window.location.href = '../miembros/miembros.html';
+}
 
 
 function mostrarError(input, span, mensaje) {

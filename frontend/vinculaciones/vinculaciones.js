@@ -238,14 +238,7 @@ document.getElementById('tbody').addEventListener('click', async (e) => {
       }).join('');
     }
 
-    // También mostrar opción de cerrar período si está activo
-    if (miembro.periodoActivo) {
-      listaHist.innerHTML += `
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Período de vinculación</p>
-          <button class="btn-primary" style="width:100%;background:#D93025" id="btn-cerrar-periodo">Cerrar período activo</button>
-        </div>`;
-    }
+
 
     document.getElementById('modal-roles').style.display = 'flex';
   }
@@ -303,15 +296,7 @@ document.getElementById('lista-roles-actuales').addEventListener('click', async 
     document.getElementById('modal-anadir').style.display = 'flex';
   }
 
-  if (e.target.id === 'btn-cerrar-periodo') {
-    if (!confirm('¿Cerrar el período activo?')) return;
-    try {
-      await api.patch(`/vinculaciones/${ciActivo}/cerrar`, {});
-      toast('Período cerrado.');
-      document.getElementById('modal-roles').style.display = 'none';
-      await cargarDatos();
-    } catch (err) { toast(err.message, 'error'); }
-  }
+
 });
 
 // Campos dinámicos al cambiar subtipo

@@ -114,11 +114,18 @@ function renderOfertas(ofertas, container, esDueno, esSugerida) {
       acciones += `<button class="btn btn-green btn-sm" onclick='postularse(${jsonAttr(o)}, this)'>✋ Postularme</button>`;
     }
 
+    let matchBadge = '';
+    if (o.match_porcentaje !== undefined && !esDueno) {
+      const level = o.match_porcentaje >= 70 ? 'high' : o.match_porcentaje >= 40 ? 'medium' : 'low';
+      const icon = o.match_porcentaje >= 70 ? '🔥' : o.match_porcentaje >= 40 ? '👍' : '👀';
+      matchBadge = `<span class="match-badge match-badge--${level}">${icon} ${o.match_porcentaje}% Match</span>`;
+    }
+
     return `
       <div class="oferta-card ${esSugerida ? 'oferta-card--sugerida' : ''}">
         <div class="oferta-card__header">
           <span class="oferta-card__title">${esc(o.cargo)}</span>
-          ${esDueno ? `<span class="badge ${o.estatus === 'Disponible' ? 'badge--green' : 'badge--gray'}">${esc(o.estatus)}</span>` : ''}
+          ${esDueno ? `<span class="badge ${o.estatus === 'Disponible' ? 'badge--green' : 'badge--gray'}">${esc(o.estatus)}</span>` : matchBadge}
         </div>
         <div class="oferta-card__body">
           <p class="oferta-card__desc"><b>Perfil buscado:</b> ${esc(o.perfil_buscado)}</p>

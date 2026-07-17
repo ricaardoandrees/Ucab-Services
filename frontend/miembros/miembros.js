@@ -47,6 +47,22 @@ async function cargarPerfil() {
     document.getElementById('residencia').value       = m.residencia   || '';
     document.getElementById('estado_residencia').value = m.estado      || '';
 
+    // MFA Simbólico guardado en LocalStorage
+    const mfaBtn = document.getElementById('btn-toggle-mfa');
+    const mfaText = document.getElementById('mfa-status-text');
+    const correoActual = document.getElementById('correo').value;
+    const mfaActivo = localStorage.getItem(`mfa_${correoActual}`) === 'true';
+
+    if (mfaActivo) {
+      mfaText.textContent = 'Actualmente activada';
+      mfaBtn.textContent = 'Desactivar MFA';
+      mfaBtn.style.background = 'var(--muted)';
+    } else {
+      mfaText.textContent = 'Actualmente desactivada';
+      mfaBtn.textContent = 'Activar MFA';
+      mfaBtn.style.background = '';
+    }
+
   } catch (err) {
     mostrarToast('Error al cargar el perfil.', 'error');
     console.error(err);
@@ -274,3 +290,19 @@ document.addEventListener('DOMContentLoaded', () => {
 cargarPerfil();
 cargarUltCambio();
 cargarVinculaciones();
+
+// Activar/Desactivar MFA (Simbólico)
+document.getElementById('btn-toggle-mfa').addEventListener('click', (e) => {
+  const isActivo = e.target.textContent.includes('Desactivar');
+  const action = isActivo ? 'desactivar' : 'activar';
+  
+  if (!confirm(`¿Estás seguro que deseas ${action} la Autenticación Multifactor (MFA)?`)) return;
+
+  const correoActual = document.getElementById('correo').value;
+  // Guardamos el estado simbólico en LocalStorage amarrado al correo
+  localStorage.setItem(`mfa_${correoActual}`, !isActivo);
+  mostrarToast(`MFA ${!isActivo ? 'activado' : 'desactivado'} exitosamente.`);
+  
+  // Refrescamos solo la vista del botón
+  cargarPerfil();
+});

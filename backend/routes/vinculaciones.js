@@ -37,6 +37,34 @@ async function validarUnSoloRolPrincipal(ci, nuevoRol) {
   return null; // Todo en orden
 }
 
+// Helper: Automatiza la actualización del historial de vinculación basado en roles exactos (principales y subtipos)
+async function actualizarHistorial(ci) {
+  let roles = [];
+  if ((await pool.query('SELECT 1 FROM Profesor WHERE CI=$1', [ci])).rowCount > 0) roles.push('Profesor');
+  if ((await pool.query('SELECT 1 FROM PersonalAdministrativo WHERE CI=$1', [ci])).rowCount > 0) roles.push('PersonalAdministrativo');
+  if ((await pool.query('SELECT 1 FROM Estudiante WHERE CI=$1', [ci])).rowCount > 0) {
+    if ((await pool.query('SELECT 1 FROM Becario WHERE CI=$1', [ci])).rowCount > 0) roles.push('Becario');
+    if ((await pool.query('SELECT 1 FROM Preparador WHERE CI=$1', [ci])).rowCount > 0) roles.push('Preparador');
+    roles.push('Estudiante');
+  }
+  if ((await pool.query('SELECT 1 FROM Egresado WHERE CI=$1', [ci])).rowCount > 0) roles.push('Egresado');
+  
+  const rolesString = roles.join(', ');
+
+  const activo = await pool.query('SELECT rol FROM PeriodoVinculacion WHERE CI = $1 AND Fecha_Fin IS NULL', [ci]);
+  const rolActivo = activo.rowCount > 0 ? activo.rows[0].rol : null;
+
+  if (rolesString !== (rolActivo || '')) {
+    if (rolActivo) {
+      await pool.query(`UPDATE PeriodoVinculacion SET Fecha_Fin = NOW() WHERE CI = $1 AND Fecha_Fin IS NULL`, [ci]);
+    }
+    if (rolesString) {
+      await pool.query(`INSERT INTO PeriodoVinculacion (Fecha_Inicio, CI, rol) VALUES (NOW(), $1, $2)`, [ci, rolesString]);
+      await pool.query(`UPDATE Miembro SET estado_de_cuenta = 'Activa' WHERE ci = $1 AND estado_de_cuenta = 'Suspendida'`, [ci]);
+    }
+  }
+}
+
 /* ── GET /api/vinculaciones/:ci
    Historial de vinculaciones de un miembro (HU-15/22)
    Detecta el subtipo consultando las tablas de especialización */
@@ -235,6 +263,7 @@ router.put('/:ci/estudiante', auth, autorizar('admin', 'director'), async (req, 
         [promedio_ponderado, escuela, semestre_actual, uc_aprobadas, facultad, ci]
       );
     }
+    await actualizarHistorial(ci);
     res.json({ mensaje: 'Ficha de estudiante actualizada.' });
   } catch (err) {
     console.error('Error PUT /vinculaciones/:ci/estudiante:', err);
@@ -267,6 +296,7 @@ router.put('/:ci/becario', auth, autorizar('admin', 'director'), async (req, res
         [tipo_beca, estatus_beneficio, cumple, ci]
       );
     }
+    await actualizarHistorial(ci);
     res.json({ mensaje: 'Ficha de becario actualizada.' });
   } catch (err) {
     console.error('Error PUT /vinculaciones/:ci/becario:', err);
@@ -291,6 +321,7 @@ router.put('/:ci/preparador', auth, autorizar('admin', 'director'), async (req, 
     } else {
       await pool.query(`UPDATE Preparador SET asignatura=$1, horas=$2 WHERE CI=$3`, [asignatura, horas, ci]);
     }
+    await actualizarHistorial(ci);
     res.json({ mensaje: 'Ficha de preparador actualizada.' });
   } catch (err) {
     console.error('Error PUT /vinculaciones/:ci/preparador:', err);
@@ -319,6 +350,7 @@ router.put('/:ci/profesor', auth, autorizar('admin', 'director'), async (req, re
         [carga_horaria, escalafon, cod_investigador || null, ci]
       );
     }
+    await actualizarHistorial(ci);
     res.json({ mensaje: 'Ficha de profesor actualizada.' });
   } catch (err) {
     console.error('Error PUT /vinculaciones/:ci/profesor:', err);
@@ -360,6 +392,7 @@ router.put('/:ci/personaladmin', auth, autorizar('admin', 'director'), async (re
         [adscripcion_presupuestaria, cargo, carga_semanal || null, ci]
       );
     }
+    await actualizarHistorial(ci);
     res.json({ mensaje: 'Ficha de personal administrativo actualizada.' });
   } catch (err) {
     console.error('Error PUT /vinculaciones/:ci/personaladmin:', err);
@@ -388,6 +421,7 @@ router.put('/:ci/egresado', auth, autorizar('admin', 'director'), async (req, re
         [titulo, indice_final, ano_graduacion, ci]
       );
     }
+    await actualizarHistorial(ci);
     res.json({ mensaje: 'Ficha de egresado actualizada.' });
   } catch (err) {
     console.error('Error PUT /vinculaciones/:ci/egresado:', err);
@@ -425,28 +459,7 @@ router.delete('/:ci/rol/:tipo', auth, autorizar('admin', 'director'), async (req
       await pool.query(`REVOKE rol_infraestructura FROM "${safeCI}"`).catch(() => {});
     }
 
-    // Automatización del Historial:
-    // Al quitar un rol, cerramos el período actual para dejar registro histórico
-    await pool.query(`UPDATE PeriodoVinculacion SET Fecha_Fin = NOW() WHERE CI = $1 AND Fecha_Fin IS NULL`, [ci]);
-
-    // Averiguar cuál es el nuevo rol principal que le queda para abrir un nuevo período
-    let nuevoRol = null;
-    if ((await pool.query('SELECT 1 FROM Profesor WHERE CI=$1', [ci])).rowCount > 0) nuevoRol = 'Profesor';
-    else if ((await pool.query('SELECT 1 FROM PersonalAdministrativo WHERE CI=$1', [ci])).rowCount > 0) nuevoRol = 'PersonalAdministrativo';
-    else if ((await pool.query('SELECT 1 FROM Estudiante WHERE CI=$1', [ci])).rowCount > 0) nuevoRol = 'Estudiante';
-    else if ((await pool.query('SELECT 1 FROM Egresado WHERE CI=$1', [ci])).rowCount > 0) nuevoRol = 'Egresado';
-
-    // Abrir nuevo período solo si le queda algún rol
-    if (nuevoRol) {
-      await pool.query(`INSERT INTO PeriodoVinculacion (Fecha_Inicio, CI, rol) VALUES (NOW(), $1, $2)`, [ci, nuevoRol]);
-      
-      // Reactivar cuenta si el trigger de PostgreSQL la suspendió temporalmente al cerrar el período
-      await pool.query(
-        `UPDATE Miembro SET estado_de_cuenta = 'Activa'
-         WHERE ci = $1 AND estado_de_cuenta = 'Suspendida'`,
-        [ci]
-      );
-    }
+    await actualizarHistorial(ci);
 
     res.json({ mensaje: `Rol ${tipo} eliminado correctamente. Historial actualizado.` });
   } catch (err) {
