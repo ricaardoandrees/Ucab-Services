@@ -18,11 +18,20 @@ AS $$
 DECLARE
     v_ahora TIMESTAMP := clock_timestamp();
 BEGIN
+    -- El INSERT en Solicitud dispara trg_generar_pasos_solicitud, que ya
+    -- crea todos los Paso_Actividad de la PlantillaPaso del servicio (con
+    -- su unidad_responsable). Antes este procedimiento tambien insertaba
+    -- un paso 1 a mano sin unidad_responsable (NOT NULL) y ademas chocaba
+    -- con el paso 1 que ya inserta el trigger para servicios con plantilla.
     INSERT INTO Solicitud (fecha_hora_creacion, CI, nombre_servicio, numero_servicio, estado)
     VALUES (v_ahora, p_ci, p_nombre_servicio, p_numero_servicio, 'En Proceso');
 
-    INSERT INTO Paso_Actividad (numero_paso, fecha_hora_creacion_solicitud, estado, descripcion, CI)
-    VALUES (1, v_ahora, 'Pendiente', p_descripcion_paso1, p_ci_responsable);
+    -- Si el servicio no tiene PlantillaPaso, el trigger no genera nada;
+    -- en ese caso se deja el paso 1 descrito por el llamador.
+    IF NOT EXISTS (SELECT 1 FROM Paso_Actividad WHERE fecha_hora_creacion_solicitud = v_ahora) THEN
+        INSERT INTO Paso_Actividad (numero_paso, fecha_hora_creacion_solicitud, estado, descripcion, unidad_responsable, CI, fecha_hora_inicio)
+        VALUES (1, v_ahora, 'Pendiente', p_descripcion_paso1, 'Secretaria', p_ci_responsable, v_ahora);
+    END IF;
 
     RAISE NOTICE 'Solicitud creada con fecha_hora_creacion = %', v_ahora;
 END;

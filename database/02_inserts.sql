@@ -11,7 +11,8 @@ INSERT INTO Miembro (CI, correo, estado_de_cuenta, fecha_nacimiento, primer_nomb
 ('V-17101010','roberto.castillo@ucab.edu.ve','Activa','1995-03-08','Roberto','Castillo',NULL,'Mendoza','2025-05-20 15:00:00','04246667788','Av. Andres Bello','Distrito Capital','Caracas',0.00,'M'),
 ('V-18202020','patricia.lopez@ucab.edu.ve','Activa','1996-08-14','Patricia','Lopez',NULL,NULL,'2025-04-10 12:00:00','04149991122','Urb. El Rosal','Distrito Capital','Caracas',0.00,'F'),
 ('V-16303030','miguel.sanchez@ucab.edu.ve','Activa','1994-12-01','Miguel','Sanchez','Angel',NULL,'2025-03-05 09:00:00','04161112244','Av. Casanova','Distrito Capital','Caracas',0.00,'M'),
-('V-12444444','sofia.blanco@ucab.edu.ve','Activa','1988-07-19','Sofia','Blanco',NULL,'Reyes','2025-08-01 10:00:00','04148889900','Av. Libertador, Res. Parque Central','Distrito Capital','Caracas',0.00,'F');
+('V-12444444','sofia.blanco@ucab.edu.ve','Activa','1988-07-19','Sofia','Blanco',NULL,'Reyes','2025-08-01 10:00:00','04148889900','Av. Libertador, Res. Parque Central','Distrito Capital','Caracas',0.00,'F'),
+('V-11555555','andrea.salazar@ucab.edu.ve','Activa','1991-10-05','Andrea','Salazar',NULL,'Rivas','2025-09-01 09:00:00','04161234567','Av. Principal de Los Ruices','Distrito Capital','Caracas',0.00,'F');
 
 INSERT INTO Egresado (CI, indice_final, titulo, ano_graduacion) VALUES
 ('V-17101010',16.50,'Ing. Informatico',2024),
@@ -39,7 +40,8 @@ INSERT INTO Profesor (CI, carga_horaria, escalafon, cod_investigador) VALUES
 INSERT INTO PersonalAdministrativo (CI, adscripcion_presupuestaria, cargo, carga_semanal) VALUES
 ('V-10888888','Caja','Funcionario',40),
 ('V-13999999','Secretaria','Director',40),
-('V-12444444','Oficina','Funcionario',40);
+('V-12444444','Oficina','Funcionario',40),
+('V-11555555','Seguridad','Funcionario',40);
 
 INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, geolocalizacion, intentos_fallidos, MFA) VALUES
 ('2026-06-01 08:15:00','DEV-A1B2C3','V-20111111','Caracas, Venezuela',0,'Activo'),
@@ -56,7 +58,8 @@ INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, geolocalizacion, intentos
 ('2026-05-15 09:10:00','DEV-B1C2D3','V-17101010','Caracas, Venezuela',0,'Inactivo'),
 ('2026-05-16 09:10:00','DEV-E4F5G6','V-18202020','Caracas, Venezuela',0,'Inactivo'),
 ('2026-05-17 09:10:00','DEV-H7I8J9','V-16303030','Caracas, Venezuela',0,'Inactivo'),
-('2026-06-03 09:00:00','DEV-C3D4E5','V-12444444','Caracas, Venezuela',0,'Activo');
+('2026-06-03 09:00:00','DEV-C3D4E5','V-12444444','Caracas, Venezuela',0,'Activo'),
+('2026-06-04 07:00:00','DEV-K9L0M1','V-11555555','Caracas, Venezuela',0,'Activo');
 
 INSERT INTO PeriodoVinculacion (Fecha_Inicio, Fecha_Fin, CI, rol) VALUES
 ('2022-09-01 00:00:00',NULL,'V-20111111','Estudiante'),
@@ -71,7 +74,8 @@ INSERT INTO PeriodoVinculacion (Fecha_Inicio, Fecha_Fin, CI, rol) VALUES
 ('2018-09-01 00:00:00','2024-07-15 00:00:00','V-17101010','Egresado'),
 ('2017-09-01 00:00:00','2023-07-15 00:00:00','V-18202020','Egresado'),
 ('2016-09-01 00:00:00','2022-07-15 00:00:00','V-16303030','Egresado'),
-('2019-03-01 00:00:00',NULL,'V-12444444','PersonalAdministrativo');
+('2019-03-01 00:00:00',NULL,'V-12444444','PersonalAdministrativo'),
+('2020-01-15 00:00:00',NULL,'V-11555555','PersonalAdministrativo');
 
 INSERT INTO Vehiculo (Placa, Modelo, Color, Tipo, Ano, CI) VALUES
 ('ABC-123','Toyota Corolla','Blanco','Carro',2020,'V-20111111'),
@@ -430,3 +434,138 @@ INSERT INTO Efectivo (fecha_hora_pago, monto, moneda, monto_recibido) VALUES
 INSERT INTO Denominaciones (fecha_hora_pago, monto, valor_denominacion, cantidad) VALUES
 ('2026-05-05 18:10:00',150.00,1000.00,5),
 ('2026-05-05 18:10:00',150.00,500.00,1);
+
+/* ============================================================
+   BACKFILL: Paso_Actividad.fecha_hora_finalizado quedaba pegado
+   a la hora real en que se corrio el seed (por el trigger de
+   bitacora automatica), no a una fecha narrativa coherente con
+   Solicitud.fecha_hora_finalizado (que si estaba bien). Sin esto,
+   cualquier reporte de "cuellos de botella por paso" sale plano.
+============================================================ */
+ALTER TABLE Paso_Actividad DISABLE TRIGGER trg_bitacora_paso_finalizado;
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-01 09:20:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-01 09:00:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-01 10:30:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-01 09:00:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-02 10:35:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-02 10:15:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-02 11:00:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-02 10:15:00';
+
+-- cuello de botella real: Secretaria tardo 3 dias en el paso 1
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-06 10:00:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-03 14:00:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-10 09:00:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-03 14:00:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-04 09:00:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-04 08:30:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-05 16:30:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-05 16:00:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-05 18:00:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-05 16:00:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-06 08:00:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-06 07:45:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-06 09:45:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-06 07:45:00';
+
+-- otro cuello de botella real: Oficina tardo 7 dias en el paso 2
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-07 11:40:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-07 11:20:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-14 12:00:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-07 11:20:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-08 13:30:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-08 13:10:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-08 13:50:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-08 13:10:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-09 10:10:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-09 09:50:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-10 15:50:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-10 15:30:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-17 16:00:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-10 15:30:00';
+
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-11 08:05:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-05-11 08:00:00';
+UPDATE Paso_Actividad SET fecha_hora_finalizado = '2026-05-11 08:10:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-05-11 08:00:00';
+
+ALTER TABLE Paso_Actividad ENABLE TRIGGER trg_bitacora_paso_finalizado;
+
+/* ============================================================
+   DATOS ADICIONALES — variedad para metricas/reportes:
+   evolucion de beneficiarios, cuellos de botella, ocupacion de
+   espacios por sede, efectividad de bolsa de trabajo
+============================================================ */
+
+-- Beneficiario cuya cobertura ya termino (para que fecha_fin no
+-- este siempre en NULL — el CHECK solo permite fecha_fin si el
+-- estatus es Inhabilitado, y antes ningun seed llegaba a ese estado)
+INSERT INTO Beneficiario (CI, Nombre, Parentesco, fecha_nacimiento, estatus_cobertura, fecha_inicio, fecha_fin, CI_miembro) VALUES
+('V-30333333','Andres Gonzalez','Hijo','2006-02-10','Inhabilitado','2006-03-01','2026-05-20','V-06666666');
+INSERT INTO CargaMayor (CI, constancia_estudios_uni, certificado_solteria) VALUES
+('V-30333333',NULL,NULL);
+
+-- Beneficiario reciente, para que la evolucion en el tiempo no se
+-- vea plana (los demas arrancan entre 2010 y 2021)
+INSERT INTO Beneficiario (CI, Nombre, Parentesco, fecha_nacimiento, estatus_cobertura, fecha_inicio, CI_miembro) VALUES
+('V-30444444','Valeria Torres','Hija','2023-11-20','Habilitado','2024-03-01','V-13999999');
+INSERT INTO CargaMenor (CI, centro_educacion_inicial, esquema_vacunacion) VALUES
+('V-30444444','Centro Infantil UCAB','Completo');
+
+-- Solicitud rapida (Consulta Medica General, ~45 min)
+INSERT INTO Solicitud (fecha_hora_creacion, CI, nombre_servicio, numero_servicio, estado) VALUES
+('2026-06-01 09:00:00','V-20111111','Consulta Medica General',1,'En Proceso');
+
+-- Solicitud lenta (Diplomado en Gerencia de Proyectos, Guayana) —
+-- otro cuello de botella en Secretaria, y sirve para las reservas
+-- de Guayana de mas abajo
+INSERT INTO Solicitud (fecha_hora_creacion, CI, nombre_servicio, numero_servicio, estado) VALUES
+('2026-06-03 08:00:00','V-18202020','Diplomado en Gerencia de Proyectos',1,'En Proceso');
+
+-- Solicitud todavia pendiente (Examen de Laboratorio, Guayana) —
+-- caso activo para el reporte de cuellos de botella
+INSERT INTO Solicitud (fecha_hora_creacion, CI, nombre_servicio, numero_servicio, estado) VALUES
+('2026-06-10 14:00:00','V-16303030','Examen de Laboratorio',1,'En Proceso');
+
+ALTER TABLE Paso_Actividad DISABLE TRIGGER trg_bitacora_paso_finalizado;
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-10888888', fecha_hora_finalizado='2026-06-01 09:20:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-06-01 09:00:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-12444444', fecha_hora_finalizado='2026-06-01 09:45:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-06-01 09:00:00';
+UPDATE Solicitud SET estado='Completada', fecha_hora_finalizado='2026-06-01 09:45:00' WHERE fecha_hora_creacion='2026-06-01 09:00:00';
+
+UPDATE Paso_Actividad SET estado='Completado', CI='V-13999999', fecha_hora_finalizado='2026-06-08 10:00:00' WHERE numero_paso=1 AND fecha_hora_creacion_solicitud='2026-06-03 08:00:00';
+UPDATE Paso_Actividad SET estado='Completado', CI='V-13999999', fecha_hora_finalizado='2026-06-12 09:00:00' WHERE numero_paso=2 AND fecha_hora_creacion_solicitud='2026-06-03 08:00:00';
+UPDATE Solicitud SET estado='Completada', fecha_hora_finalizado='2026-06-12 09:00:00' WHERE fecha_hora_creacion='2026-06-03 08:00:00';
+
+ALTER TABLE Paso_Actividad ENABLE TRIGGER trg_bitacora_paso_finalizado;
+
+-- Reservas en Guayana (ligadas a la solicitud del Diplomado), para
+-- que la tasa de ocupacion por sede no salga toda concentrada en
+-- Montalban
+INSERT INTO Reserva (nombre_servicio, numero_servicio, fecha_hora, fecha_hora_fin, fecha_hora_creacion_solicitud, numero_espacio, nombre_edif, direccion_exacta, nombre_sede_espacio, estado) VALUES
+('Diplomado en Gerencia de Proyectos',1,'2026-06-08 10:00:00','2026-06-08 12:00:00','2026-06-03 08:00:00',1,'Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana','Confirmada'),
+('Diplomado en Gerencia de Proyectos',1,'2026-06-12 09:00:00','2026-06-12 11:00:00','2026-06-03 08:00:00',2,'Edificio Administrativo','Av. Guayana, Puerto Ordaz','Guayana','Confirmada');
+
+-- Mas ofertas laborales y postulaciones, para que el emparejamiento
+-- (match_porcentaje / buscar_candidatos_egresados) tenga mas casos
+INSERT INTO OfertaLaboral (Fecha_Oferta, cargo, RIF, responsabilidades, perfil_buscado, beneficios, estatus) VALUES
+('2026-06-01 09:00:00','Contador Junior','J-23456789-0','Elaboracion de reportes financieros','Egresado de Administracion o Contaduria con indice > 14','Seguro HCM','Disponible'),
+('2026-06-05 10:00:00','Asistente de Laboratorio','J-12345678-9','Apoyo en toma de muestras clinicas','Egresado de Ingenieria o Ciencias de la Salud','Bono de transporte','Disponible');
+
+INSERT INTO Postula (CI, Fecha_Oferta, cargo, RIF) VALUES
+('V-18202020','2026-06-01 09:00:00','Contador Junior','J-23456789-0'),
+('V-17101010','2026-06-01 09:00:00','Contador Junior','J-23456789-0'),
+('V-16303030','2026-06-05 10:00:00','Asistente de Laboratorio','J-12345678-9');
+
+/* ============================================================
+   BACKFILL: fecha_hora_inicio de Paso_Actividad. Los pasos de
+   arriba se completaron con UPDATE directos (no via el flujo real
+   de la app), asi que trg_iniciar_paso_siguiente disparo de mas
+   durante los UPDATE de mas arriba y encadeno fechas_hora_inicio
+   equivocadas (el clock_timestamp() de cuando corrio el pipeline,
+   no el historico real). Este backfill es la pasada final y
+   autoritativa: pisa fecha_hora_inicio sin condicion, recalculando
+   siempre a partir del fecha_hora_finalizado ya correcto de arriba.
+   De aqui en adelante, cualquier solicitud creada por la app ya no
+   necesita esto — el trigger la deja bien desde el primer momento.
+============================================================ */
+UPDATE Paso_Actividad p1
+SET fecha_hora_inicio = s.fecha_hora_creacion
+FROM Solicitud s
+WHERE s.fecha_hora_creacion = p1.fecha_hora_creacion_solicitud
+  AND p1.numero_paso = 1;
+
+UPDATE Paso_Actividad p2
+SET fecha_hora_inicio = p1.fecha_hora_finalizado
+FROM Paso_Actividad p1
+WHERE p1.fecha_hora_creacion_solicitud = p2.fecha_hora_creacion_solicitud
+  AND p1.numero_paso = p2.numero_paso - 1
+  AND p1.estado = 'Completado';

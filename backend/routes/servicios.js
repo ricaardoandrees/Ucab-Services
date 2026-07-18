@@ -835,10 +835,10 @@ router.patch('/pasos', auth, autorizar('admin', 'director'), async (req, res) =>
     if (parseInt(checkPasos.rows[0].pendientes) === 0) {
       // Todos los pasos están completados, actualizamos la Solicitud
       await pool.query(`
-        UPDATE Solicitud 
-        SET estado = 'Completada' 
+        UPDATE Solicitud
+        SET estado = 'Completada', fecha_hora_finalizado = $2
         WHERE fecha_hora_creacion = $1
-      `, [fecha_hora_creacion_solicitud]);
+      `, [fecha_hora_creacion_solicitud, fechaHoraFin]);
     }
 
     res.json({ mensaje: 'Paso completado', paso: result.rows[0] });

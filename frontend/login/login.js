@@ -91,6 +91,10 @@ form.addEventListener('submit', async (e) => {
   const correo    = inputCorreo.value.trim();
   const contrasena = inputPass.value;
 
+  // Zona horaria del navegador (ej. "America/Caracas"), para auditar desde
+  // donde se conecta cada sesion sin pedir permiso de geolocalizacion.
+  const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   // Estado de carga
   setLoading(true);
 
@@ -98,7 +102,7 @@ form.addEventListener('submit', async (e) => {
     const response = await fetch(API_URL, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ correo, contrasena })
+      body:    JSON.stringify({ correo, contrasena, zonaHoraria })
     });
 
     const data = await response.json();

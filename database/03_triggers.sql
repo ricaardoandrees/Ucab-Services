@@ -719,6 +719,34 @@ CREATE OR REPLACE TRIGGER trg_bitacora_paso_finalizado
 BEFORE INSERT OR UPDATE ON Paso_Actividad
 FOR EACH ROW
 EXECUTE FUNCTION fn_bitacora_paso_finalizado();
+
+-- ------------------------------------------------------------
+-- Cuando un paso se completa, el paso siguiente (numero_paso+1)
+-- de la misma solicitud recien puede empezar (RN-34) — le graba
+-- fecha_hora_inicio = el mismo instante en que termino el paso
+-- anterior. Sin esto, fecha_hora_inicio de los pasos 2+ quedaba
+-- siempre NULL y los reportes de tiempo de respuesta por oficina
+-- no se podian calcular.
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_iniciar_paso_siguiente()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.estado = 'Completado' AND (TG_OP = 'INSERT' OR OLD.estado <> 'Completado') THEN
+        UPDATE Paso_Actividad
+        SET fecha_hora_inicio = NEW.fecha_hora_finalizado
+        WHERE fecha_hora_creacion_solicitud = NEW.fecha_hora_creacion_solicitud
+          AND numero_paso = NEW.numero_paso + 1
+          AND fecha_hora_inicio IS NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER trg_iniciar_paso_siguiente
+AFTER INSERT OR UPDATE ON Paso_Actividad
+FOR EACH ROW
+EXECUTE FUNCTION fn_iniciar_paso_siguiente();
+
 /* ============================================================
    RN-22
 ============================================================ */
@@ -795,11 +823,16 @@ DROP FUNCTION IF EXISTS fn_validar_paso_secuencial();
 -- =====================================================================
 
 -- 1) Generar pasos autom�ticamente desde la plantilla al crear solicitud
+-- El paso 1 arranca de inmediato (fecha_hora_inicio = creacion de la
+-- solicitud); los pasos 2+ no tienen fecha_hora_inicio todavia porque, por
+-- RN-34, no pueden empezar hasta que el paso anterior se complete —
+-- fn_iniciar_paso_siguiente (mas abajo) se la pone en ese momento.
 CREATE OR REPLACE FUNCTION fn_generar_pasos_solicitud()
 RETURNS TRIGGER AS $body$
 BEGIN
-    INSERT INTO Paso_Actividad (numero_paso, fecha_hora_creacion_solicitud, estado, descripcion, unidad_responsable, CI)
-    SELECT numero_paso, NEW.fecha_hora_creacion, 'Pendiente', descripcion, unidad_responsable, NULL
+    INSERT INTO Paso_Actividad (numero_paso, fecha_hora_creacion_solicitud, estado, descripcion, unidad_responsable, CI, fecha_hora_inicio)
+    SELECT numero_paso, NEW.fecha_hora_creacion, 'Pendiente', descripcion, unidad_responsable, NULL,
+           CASE WHEN numero_paso = 1 THEN NEW.fecha_hora_creacion ELSE NULL END
     FROM PlantillaPaso
     WHERE nombre_servicio = NEW.nombre_servicio AND numero_servicio = NEW.numero_servicio;
 

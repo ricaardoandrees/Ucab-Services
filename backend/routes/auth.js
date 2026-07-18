@@ -36,7 +36,7 @@ async function detectarSubtipo(CI) {
 }
 
 router.post('/login', async (req, res) => {
-  const { correo, contrasena } = req.body;
+  const { correo, contrasena, zonaHoraria } = req.body;
 
   if (!correo || !contrasena) {
     return res.status(400).json({ error: 'Correo y contraseña son requeridos' });
@@ -94,10 +94,13 @@ router.post('/login', async (req, res) => {
     const intentoActual   = contrasenaValida ? 0 : intentosPrevios + 1;
 
     const uid = (req.headers['user-agent'] || 'unknown').substring(0, 40);
+    // zonaHoraria viene del navegador (Intl.DateTimeFormat, ej. "America/Caracas");
+    // no se pide permiso de geolocalizacion, solo se usa lo que el navegador ya sabe.
+    const geo = (zonaHoraria || 'Desconocida').substring(0, 80);
     await pool.query(
-      `INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, intentos_fallidos, MFA)
-       VALUES (NOW(), $1, $2, $3, 'Inactivo')`,
-      [uid, miembro.ci, intentoActual]
+      `INSERT INTO Sesion (fecha_inicio, uid_dispositivo, CI, geolocalizacion, intentos_fallidos, MFA)
+       VALUES (NOW(), $1, $2, $3, $4, 'Inactivo')`,
+      [uid, miembro.ci, geo, intentoActual]
     );
 
     if (!contrasenaValida) {

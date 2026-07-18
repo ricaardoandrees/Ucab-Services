@@ -52,7 +52,6 @@
     { label: 'Vehículos',        icon: 'car',       path: '../vehiculos/vehiculos.html',             roles: [], excludeRoles: ['aliado_externo'] },
     { label: 'Estacionamiento',  icon: 'parking',   path: '../estacionamiento/estacionamiento.html', roles: [], excludeRoles: ['aliado_externo'] },
     { label: 'Voluntariado',     icon: 'heart',     path: '../voluntariado/voluntariado.html',       roles: [] },
-    { label: 'Reportes',         icon: 'chart',     path: '../reportes/reportes.html',               roles: ['admin','director'] },
   ];
 
   function esActivo(path) {

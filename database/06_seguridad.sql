@@ -208,6 +208,150 @@ CREATE POLICY policy_miembro_infraestructura
     TO rol_infraestructura
     USING (true);
 
+-- Solicitud: un miembro (rol_operador) solo ve/crea sus propias solicitudes;
+-- el personal administrativo (rrhh/finanzas/infraestructura) necesita ver
+-- todas para procesar pasos de actividad, aunque ninguno tenga un GRANT
+-- propio sobre la tabla (solo heredan SELECT/INSERT/UPDATE de rol_operador
+-- via membresia de rol) — RLS no amplia privilegios, solo filas visibles.
+ALTER TABLE Solicitud ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_solicitud_operador ON Solicitud;
+CREATE POLICY policy_solicitud_operador
+    ON Solicitud
+    FOR ALL
+    TO rol_operador
+    USING (ci = current_user);
+
+DROP POLICY IF EXISTS policy_solicitud_staff ON Solicitud;
+CREATE POLICY policy_solicitud_staff
+    ON Solicitud
+    FOR ALL
+    TO rol_rrhh, rol_finanzas, rol_infraestructura
+    USING (true);
+
+-- Reserva: visible solo si la Solicitud que la origino es del miembro;
+-- el personal administrativo ve todas (mismo motivo que Solicitud).
+ALTER TABLE Reserva ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_reserva_operador ON Reserva;
+CREATE POLICY policy_reserva_operador
+    ON Reserva
+    FOR ALL
+    TO rol_operador
+    USING (fecha_hora_creacion_solicitud IN (
+        SELECT fecha_hora_creacion FROM Solicitud WHERE ci = current_user
+    ));
+
+DROP POLICY IF EXISTS policy_reserva_staff ON Reserva;
+CREATE POLICY policy_reserva_staff
+    ON Reserva
+    FOR ALL
+    TO rol_rrhh, rol_finanzas, rol_infraestructura
+    USING (true);
+
+-- Vehiculo: un miembro solo ve/gestiona sus propios vehiculos; el personal
+-- administrativo ve todos (mismo motivo que Solicitud).
+ALTER TABLE Vehiculo ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_vehiculo_operador ON Vehiculo;
+CREATE POLICY policy_vehiculo_operador
+    ON Vehiculo
+    FOR ALL
+    TO rol_operador
+    USING (ci = current_user);
+
+DROP POLICY IF EXISTS policy_vehiculo_staff ON Vehiculo;
+CREATE POLICY policy_vehiculo_staff
+    ON Vehiculo
+    FOR ALL
+    TO rol_rrhh, rol_finanzas, rol_infraestructura
+    USING (true);
+
+-- Beneficiario: el miembro solo ve/registra los suyos; RRHH ve todos
+-- (tiene GRANT propio de UPDATE/DELETE sobre esta tabla).
+ALTER TABLE Beneficiario ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_beneficiario_operador ON Beneficiario;
+CREATE POLICY policy_beneficiario_operador
+    ON Beneficiario
+    FOR ALL
+    TO rol_operador
+    USING (ci_miembro = current_user);
+
+DROP POLICY IF EXISTS policy_beneficiario_rrhh ON Beneficiario;
+CREATE POLICY policy_beneficiario_rrhh
+    ON Beneficiario
+    FOR ALL
+    TO rol_rrhh
+    USING (true);
+
+-- Folio_Consumo / Item_Consumo: visibles solo si la solicitud es del
+-- miembro; Finanzas ve todo (tiene GRANT propio ALL sobre estas tablas).
+ALTER TABLE Folio_Consumo ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_folio_operador ON Folio_Consumo;
+CREATE POLICY policy_folio_operador
+    ON Folio_Consumo
+    FOR ALL
+    TO rol_operador
+    USING (fecha_hora_creacion_solicitud IN (
+        SELECT fecha_hora_creacion FROM Solicitud WHERE ci = current_user
+    ));
+
+DROP POLICY IF EXISTS policy_folio_finanzas ON Folio_Consumo;
+CREATE POLICY policy_folio_finanzas
+    ON Folio_Consumo
+    FOR ALL
+    TO rol_finanzas
+    USING (true);
+
+ALTER TABLE Item_Consumo ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_item_operador ON Item_Consumo;
+CREATE POLICY policy_item_operador
+    ON Item_Consumo
+    FOR ALL
+    TO rol_operador
+    USING (fecha_hora_creacion_solicitud IN (
+        SELECT fecha_hora_creacion FROM Solicitud WHERE ci = current_user
+    ));
+
+DROP POLICY IF EXISTS policy_item_finanzas ON Item_Consumo;
+CREATE POLICY policy_item_finanzas
+    ON Item_Consumo
+    FOR ALL
+    TO rol_finanzas
+    USING (true);
+
+-- Factura: el miembro solo ve las suyas (facturas RIF quedan fuera, un
+-- rol_operador nunca es dueno de una factura corporativa); Finanzas ve todo.
+ALTER TABLE Factura ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_factura_operador ON Factura;
+CREATE POLICY policy_factura_operador
+    ON Factura
+    FOR ALL
+    TO rol_operador
+    USING (ci = current_user);
+
+DROP POLICY IF EXISTS policy_factura_finanzas ON Factura;
+CREATE POLICY policy_factura_finanzas
+    ON Factura
+    FOR ALL
+    TO rol_finanzas
+    USING (true);
+
+-- Pagos: no tiene CI propio, se resuelve via la Factura a la que pertenece.
+ALTER TABLE Pagos ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS policy_pagos_operador ON Pagos;
+CREATE POLICY policy_pagos_operador
+    ON Pagos
+    FOR ALL
+    TO rol_operador
+    USING (numero_de_control IN (
+        SELECT numero_de_control FROM Factura WHERE ci = current_user
+    ));
+
+DROP POLICY IF EXISTS policy_pagos_finanzas ON Pagos;
+CREATE POLICY policy_pagos_finanzas
+    ON Pagos
+    FOR ALL
+    TO rol_finanzas
+    USING (true);
+
 /* ==========================================================
    CREACIÓN DE USUARIOS DE PRUEBA Y ASIGNACIÓN DE ROLES
    ========================================================== */
@@ -242,5 +386,62 @@ BEGIN
         CREATE USER "V-06666666" WITH PASSWORD '1234';
     END IF;
     GRANT rol_operador TO "V-06666666";
+
+    -- Funcionaria Seguridad (Andrea Salazar) - Solo Operador
+    -- (no existe un rol_seguridad dedicado; igual que Caja/Oficina/Secretaria,
+    -- las acciones reales de la app pasan por el pool de la app, no por este
+    -- usuario de Postgres, que solo se usa para validar la contrasena en login)
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-11555555') THEN
+        CREATE USER "V-11555555" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-11555555";
+
+    -- Estudiante (Maria Perez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-20111111') THEN
+        CREATE USER "V-20111111" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-20111111";
+
+    -- Estudiante (Valentina Diaz) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-20555555') THEN
+        CREATE USER "V-20555555" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-20555555";
+
+    -- Becaria (Ana Martinez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-20333333') THEN
+        CREATE USER "V-20333333" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-20333333";
+
+    -- Preparador (Luis Hernandez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-20444444') THEN
+        CREATE USER "V-20444444" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-20444444";
+
+    -- Profesora (Carmen Flores) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-07777777') THEN
+        CREATE USER "V-07777777" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-07777777";
+
+    -- Egresado (Roberto Castillo) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-17101010') THEN
+        CREATE USER "V-17101010" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-17101010";
+
+    -- Egresada (Patricia Lopez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-18202020') THEN
+        CREATE USER "V-18202020" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-18202020";
+
+    -- Egresado (Miguel Sanchez) - Solo Operador
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'V-16303030') THEN
+        CREATE USER "V-16303030" WITH PASSWORD '1234';
+    END IF;
+    GRANT rol_operador TO "V-16303030";
 END
 $$;

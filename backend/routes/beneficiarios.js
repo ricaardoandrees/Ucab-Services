@@ -57,7 +57,10 @@ router.get('/:ci_miembro', auth, async (req, res) => {
       `SELECT b.ci, b.nombre, b.parentesco, b.fecha_nacimiento,
               b.estatus_cobertura, b.fecha_inicio, b.fecha_fin, b.ci_miembro,
               cm.centro_educacion_inicial, cm.esquema_vacunacion,
-              cma.constancia_estudios_uni, cma.certificado_solteria
+              cma.constancia_estudios_uni, cma.certificado_solteria,
+              CASE WHEN cm.CI IS NOT NULL THEN 'menor'
+                   WHEN cma.CI IS NOT NULL THEN 'mayor'
+                   ELSE 'desconocido' END as tipo_carga
        FROM Beneficiario b
        LEFT JOIN CargaMenor cm ON cm.CI = b.CI
        LEFT JOIN CargaMayor cma ON cma.CI = b.CI
@@ -87,7 +90,10 @@ router.get('/:ci_miembro/:ci_beneficiario', auth, async (req, res) => {
       `SELECT b.ci, b.nombre, b.parentesco, b.fecha_nacimiento,
               b.estatus_cobertura, b.fecha_inicio, b.fecha_fin, b.ci_miembro,
               cm.centro_educacion_inicial, cm.esquema_vacunacion,
-              cma.constancia_estudios_uni, cma.certificado_solteria
+              cma.constancia_estudios_uni, cma.certificado_solteria,
+              CASE WHEN cm.CI IS NOT NULL THEN 'menor'
+                   WHEN cma.CI IS NOT NULL THEN 'mayor'
+                   ELSE 'desconocido' END as tipo_carga
        FROM Beneficiario b
        LEFT JOIN CargaMenor cm ON cm.CI = b.CI
        LEFT JOIN CargaMayor cma ON cma.CI = b.CI
